@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 private enum SheetRoute: Identifiable {
     case newTask
@@ -25,6 +26,7 @@ struct RootView: View {
     @State private var toastText: String?
     @State private var toastOK: Bool = true
     @State private var chrome = ScrollChrome()
+    @StateObject private var keyboard = KeyboardObserver()
 
     var body: some View {
         ZStack {
@@ -35,6 +37,7 @@ struct RootView: View {
 
             topBarLayer
             tabBarLayer
+            keyboardDismissLayer
             sheetLayer
             toastLayer
         }
@@ -126,7 +129,38 @@ struct RootView: View {
                        tab: tab,
                        onSelect: { select($0) })
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .opacity(keyboard.height > 0 ? 0 : 1)
+        .allowsHitTesting(keyboard.height == 0)
         .zIndex(5)
+    }
+
+    // MARK: - Keyboard dismiss
+
+    private var keyboardDismissLayer: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            if keyboard.height > 0 {
+                HStack {
+                    Spacer(minLength: 0)
+                    GlassCircleButton(icon: "chevron.down", size: 40, tint: Theme.blue) {
+                        hideKeyboard()
+                    }
+                }
+                .padding(.trailing, 18)
+                .padding(.bottom, 10)
+                .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .zIndex(12)
+    }
+
+    private func hideKeyboard() {
+        Haptics.tap()
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil,
+                                        from: nil,
+                                        for: nil)
     }
 
     // MARK: - Sheet
@@ -146,6 +180,7 @@ struct RootView: View {
                     .clipShape(TopRoundedShape(radius: 38))
                     .shadow(color: Color.black.opacity(0.22), radius: 30, x: 0, y: -8)
                     .ignoresSafeArea(edges: .bottom)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
                     .transition(.move(edge: .bottom))
             }
             .zIndex(10)
@@ -309,6 +344,8 @@ private struct TabBarView: View {
                             .font(.system(size: 24, weight: .regular))
                         Text(item.title)
                             .font(Theme.font(10.5, .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                             .frame(height: mini ? 0 : 14)
                             .clipped()
                             .opacity(mini ? 0 : 1)

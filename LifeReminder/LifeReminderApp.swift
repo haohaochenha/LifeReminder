@@ -16,6 +16,7 @@ struct LifeReminderApp: App {
             RootView()
                 .environmentObject(store)
                 .environmentObject(settings)
+                .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
         }
     }
 }

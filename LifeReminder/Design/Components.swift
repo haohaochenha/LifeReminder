@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import UIKit
 
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -538,16 +539,51 @@ struct ScrollOffsetKey: PreferenceKey {
 }
 
 /// 放进每个页面 ScrollView 内容的最内层 VStack 背景里。
-/// `topInset` 是页面自己的顶部内边距，用于把静止状态归零。
+/// 用全局坐标 + 首次出现时的基准值，避免命名坐标空间在部分系统版本上取不到值。
 struct ScrollTracker: View {
-    var topInset: CGFloat = 54
+    @State private var base: CGFloat?
 
     var body: some View {
         GeometryReader { geo in
-            Color.clear.preference(
-                key: ScrollOffsetKey.self,
-                value: max(0, -(geo.frame(in: .named(ScrollChrome.spaceName)).minY - topInset))
-            )
+            let y = geo.frame(in: .global).minY
+            Color.clear
+                .onAppear {
+                    if base == nil { base = y }
+                }
+                .preference(
+                    key: ScrollOffsetKey.self,
+                    value: max(0, (base ?? y) - y)
+                )
         }
+    }
+}
+
+/// 监听键盘高度：用于显示「收起键盘」按钮，并避免 tab bar 被键盘顶飞。
+final class KeyboardObserver: ObservableObject {
+    @Published private(set) var height: CGFloat = 0
+
+    private var tokens: [NSObjectProtocol] = []
+
+    init() {
+        let center = NotificationCenter.default
+        tokens.append(center.addObserver(forName: UIResponder.keyboardWillShowNotification,
+                                         object: nil,
+                                         queue: .main) { [weak self] note in
+            guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+            withAnimation(.easeOut(duration: 0.25)) {
+                self?.height = frame.height
+            }
+        })
+        tokens.append(center.addObserver(forName: UIResponder.keyboardWillHideNotification,
+                                         object: nil,
+                                         queue: .main) { [weak self] _ in
+            withAnimation(.easeOut(duration: 0.25)) {
+                self?.height = 0
+            }
+        })
+    }
+
+    deinit {
+        tokens.forEach { NotificationCenter.default.removeObserver($0) }
     }
 }
