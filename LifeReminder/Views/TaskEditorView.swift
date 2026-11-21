@@ -55,7 +55,7 @@ struct TaskEditorView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 14) {
-                    GroupCard(radius: 22) {
+                    GroupCard(radius: 22, solid: true) {
                         HStack {
                             TextField("想做什么？", text: $draft.title)
                                 .font(Theme.font(19, .medium))
@@ -221,7 +221,7 @@ struct AnniversarySheet: View {
             .padding(.bottom, 14)
 
             VStack(alignment: .leading, spacing: 14) {
-                GroupCard(radius: 22) {
+                GroupCard(radius: 22, solid: true) {
                     TextField("纪念日名称，比如「在一起」", text: $title)
                         .font(Theme.font(19, .medium))
                         .foregroundColor(Theme.label)

@@ -40,10 +40,12 @@ struct CaptureView: View {
 
                 recentIdeas
             }
+            .background(ScrollTracker())
             .padding(.horizontal, 20)
             .padding(.top, 54)
             .padding(.bottom, 120)
         }
+        .coordinateSpace(name: ScrollChrome.spaceName)
         .onAppear {
             recorder.requestPermission { _ in }
         }

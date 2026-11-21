@@ -223,7 +223,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .today: return "今日"
+        case .today: return "今天"
         case .tasks: return "任务"
         case .capture: return "记录"
         case .settings: return "设置"

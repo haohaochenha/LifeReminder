@@ -32,7 +32,7 @@ struct TasksView: View {
             VStack(alignment: .leading, spacing: 14) {
                 header
                 SegmentedControl(items: filters, selection: $filterIndex)
-                Text("左滑删除 · 点一下编辑")
+                Text("点圆圈完成 · 左滑删除")
                     .font(Theme.font(13))
                     .foregroundColor(Theme.label3)
                     .padding(.horizontal, 4)
@@ -69,10 +69,12 @@ struct TasksView: View {
                     }
                 }
             }
+            .background(ScrollTracker())
             .padding(.horizontal, 20)
             .padding(.top, 54)
             .padding(.bottom, 120)
         }
+        .coordinateSpace(name: ScrollChrome.spaceName)
     }
 
     private var header: some View {

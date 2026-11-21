@@ -44,21 +44,32 @@ enum Theme {
     static let segment = Color.dynamic(light: 0xFFFFFF, dark: 0x636366)
 
     // 玻璃
+    /// 毛玻璃卡片填充，对应 HTML 的 --gcard
     static let glass = Color(UIColor { trait in
         UIColor.white.withAlphaComponent(trait.userInterfaceStyle == .dark ? 0.075 : 0.52)
     })
+    /// 底部 tab bar / 浮动按钮的玻璃，对应 HTML 的 --glass
+    static let tabGlass = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(hex: 0x2C2C2E, alpha: 0.6)
+            : UIColor.white.withAlphaComponent(0.62)
+    })
     static let glassBorder = Color(UIColor { trait in
-        UIColor.white.withAlphaComponent(trait.userInterfaceStyle == .dark ? 0.14 : 0.78)
+        UIColor.white.withAlphaComponent(trait.userInterfaceStyle == .dark ? 0.14 : 0.75)
+    })
+    /// 顶部内高光，对应 --gshadow 的 inset 0 1px 0
+    static let glassHighlight = Color(UIColor { trait in
+        UIColor.white.withAlphaComponent(trait.userInterfaceStyle == .dark ? 0.16 : 0.95)
     })
     static let navBg = Color(UIColor { trait in
         trait.userInterfaceStyle == .dark
-            ? UIColor(hex: 0x000000, alpha: 0.72)
+            ? UIColor(hex: 0x000000, alpha: 0.7)
             : UIColor(hex: 0xF2F2F7, alpha: 0.72)
     })
     static let shadow = Color(UIColor { trait in
         trait.userInterfaceStyle == .dark
-            ? UIColor.black.withAlphaComponent(0.55)
-            : UIColor(hex: 0x28468C, alpha: 0.20)
+            ? UIColor.black.withAlphaComponent(0.7)
+            : UIColor(hex: 0x28468C, alpha: 0.25)
     })
 
     // 强调色
@@ -239,17 +250,39 @@ struct GlassCard: ViewModifier {
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return content
-            .background(shape.fill(Theme.glass))
-            .background(shape.fill(Material.ultraThinMaterial))
-            .overlay(shape.strokeBorder(Theme.glassBorder, lineWidth: 0.5))
+            // 先模糊背板、再盖一层半透明白膜，和 HTML 的 backdrop-filter + --gcard 一致
+            .background(
+                ZStack {
+                    shape.fill(Material.ultraThinMaterial)
+                    shape.fill(Theme.glass)
+                }
+            )
             .clipShape(shape)
-            .shadow(color: shadow ? Theme.shadow : .clear, radius: 16, x: 0, y: 10)
+            .overlay(shape.strokeBorder(Theme.glassBorder, lineWidth: 0.5))
+            .overlay(
+                shape.strokeBorder(
+                    LinearGradient(stops: [
+                        Gradient.Stop(color: Theme.glassHighlight, location: 0),
+                        Gradient.Stop(color: Theme.glassHighlight.opacity(0.35), location: 0.3),
+                        Gradient.Stop(color: Color.clear, location: 0.62)
+                    ], startPoint: .top, endPoint: .bottom),
+                    lineWidth: 0.5
+                )
+            )
+            .shadow(color: shadow ? Theme.shadow : .clear, radius: 18, x: 0, y: 10)
     }
 }
 
 extension View {
     func glassCard(radius: CGFloat = 24, shadow: Bool = true) -> some View {
         modifier(GlassCard(radius: radius, shadow: shadow))
+    }
+
+    /// 弹层里的分组卡：实色、无模糊、无边框、无阴影（对应 HTML 的 .sheet .group）
+    func solidCard(radius: CGFloat = 22) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return background(shape.fill(Theme.card))
+            .clipShape(shape)
     }
 }
 

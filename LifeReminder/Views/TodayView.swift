@@ -44,10 +44,12 @@ struct TodayView: View {
                 quickCapture
                 todaySection
             }
+            .background(ScrollTracker())
             .padding(.horizontal, 20)
             .padding(.top, 54)
             .padding(.bottom, 120)
         }
+        .coordinateSpace(name: ScrollChrome.spaceName)
         .onReceive(ticker) { now = $0 }
     }
 
@@ -258,9 +260,9 @@ struct TodayView: View {
                     }
                     .frame(width: 176, height: 184)
                     .background(RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .fill(Theme.fill.opacity(0.4)))
+                        .fill(Color.clear))
                     .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .strokeBorder(Theme.separator, style: StrokeStyle(lineWidth: 1.5, dash: [6, 6])))
+                        .strokeBorder(Theme.label3, style: StrokeStyle(lineWidth: 1.5, dash: [6, 6])))
                 }
                 .buttonStyle(PressableStyle())
             }
@@ -490,6 +492,8 @@ struct TaskRow: View {
                     .background(Theme.red)
             }
             .buttonStyle(.plain)
+            .opacity(offset < -1 ? 1 : 0)
+            .allowsHitTesting(offset < -1)
 
             rowContent
                 .background(offset < -1 ? Theme.card : Color.clear)
@@ -553,11 +557,24 @@ struct TaskRow: View {
         DragGesture(minimumDistance: 12)
             .onChanged { value in
                 let base = open ? -88.0 : 0.0
-                offset = min(0, max(-120, base + value.translation.width))
+                offset = min(0, max(-280, base + value.translation.width))
             }
             .onEnded { value in
                 let base = open ? -88.0 : 0.0
-                let shouldOpen = base + value.translation.width < -44
+                let x = base + value.translation.width
+
+                // 和 HTML 一致：滑过 -210 直接删除
+                if x < -210 {
+                    withAnimation(.easeIn(duration: 0.2)) {
+                        offset = -420
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        onDelete()
+                    }
+                    return
+                }
+
+                let shouldOpen = x < -44
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     open = shouldOpen
                     offset = shouldOpen ? -88 : 0

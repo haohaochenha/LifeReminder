@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -34,18 +35,23 @@ struct IconTile: View {
 
 struct GroupCard<Content: View>: View {
     var radius: CGFloat = 24
+    var solid: Bool = false
     let content: Content
 
-    init(radius: CGFloat = 24, @ViewBuilder content: () -> Content) {
+    init(radius: CGFloat = 24, solid: Bool = false, @ViewBuilder content: () -> Content) {
         self.radius = radius
+        self.solid = solid
         self.content = content()
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            content
+        if solid {
+            VStack(spacing: 0) { content }
+                .solidCard(radius: radius)
+        } else {
+            VStack(spacing: 0) { content }
+                .glassCard(radius: radius)
         }
-        .glassCard(radius: radius)
     }
 }
 
@@ -88,7 +94,7 @@ struct FormCell<Content: View>: View {
                 Text(title)
                     .font(Theme.font(17))
                     .foregroundColor(Theme.label)
-                    .frame(width: 76, alignment: .leading)
+                    .frame(width: 96, alignment: .leading)
             }
             content
         }
@@ -374,10 +380,14 @@ struct GlassCircleButton: View {
                 .font(.system(size: size * 0.42, weight: .semibold))
                 .foregroundColor(tint)
                 .frame(width: size, height: size)
-                .background(Circle().fill(Theme.glass))
-                .background(Circle().fill(Material.ultraThinMaterial))
+                .background(
+                    ZStack {
+                        Circle().fill(Material.ultraThinMaterial)
+                        Circle().fill(Theme.tabGlass)
+                    }
+                )
                 .overlay(Circle().strokeBorder(Theme.glassBorder, lineWidth: 0.5))
-                .shadow(color: Theme.shadow, radius: 12, x: 0, y: 6)
+                .shadow(color: Theme.shadow, radius: 14, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
     }
@@ -451,10 +461,14 @@ struct ToastBanner: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 11)
-        .background(Capsule().fill(Theme.glass))
-        .background(Capsule().fill(Material.ultraThinMaterial))
+        .background(
+            ZStack {
+                Capsule().fill(Material.ultraThinMaterial)
+                Capsule().fill(Theme.tabGlass)
+            }
+        )
         .overlay(Capsule().strokeBorder(Theme.glassBorder, lineWidth: 0.5))
-        .shadow(color: Theme.shadow, radius: 14, x: 0, y: 8)
+        .shadow(color: Theme.shadow, radius: 16, x: 0, y: 8)
     }
 }
 
@@ -466,5 +480,74 @@ struct GFCaption: View {
             .font(Theme.font(13))
             .foregroundColor(Theme.label2)
             .lineSpacing(3)
+    }
+}
+
+// MARK: - 滚动联动（顶栏毛玻璃渐显 + tab bar 自动收起）
+
+/// 对应 HTML 里的 lastY / --p 逻辑，独立成 ObservableObject，
+/// 让滚动时不触发 RootView 整体重绘。
+final class ScrollChrome: ObservableObject {
+    static let spaceName = "life-scroll"
+
+    /// 当前滚动距离（内容顶部离开视口顶部的距离）
+    @Published private(set) var y: CGFloat = 0
+    /// tab bar 是否收起（矮、缩、隐藏文字）
+    @Published private(set) var mini: Bool = false
+
+    private var lastY: CGFloat = 0
+
+    /// 顶栏不透明度：clamp((y - 24) / 28)
+    var topBarOpacity: Double {
+        Double(min(1, max(0, (y - 24) / 28)))
+    }
+
+    func update(_ value: CGFloat) {
+        guard abs(value - y) > 0.4 else { return }
+        y = value
+
+        let delta = value - lastY
+        if abs(delta) > 8 {
+            let next = delta > 0 && value > 70
+            if next != mini {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.88)) {
+                    mini = next
+                }
+            }
+            lastY = value
+        }
+    }
+
+    func reset() {
+        y = 0
+        lastY = 0
+        if mini {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.88)) {
+                mini = false
+            }
+        }
+    }
+}
+
+struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+/// 放进每个页面 ScrollView 内容的最内层 VStack 背景里。
+/// `topInset` 是页面自己的顶部内边距，用于把静止状态归零。
+struct ScrollTracker: View {
+    var topInset: CGFloat = 54
+
+    var body: some View {
+        GeometryReader { geo in
+            Color.clear.preference(
+                key: ScrollOffsetKey.self,
+                value: max(0, -(geo.frame(in: .named(ScrollChrome.spaceName)).minY - topInset))
+            )
+        }
     }
 }

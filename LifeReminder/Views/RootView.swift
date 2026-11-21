@@ -24,8 +24,7 @@ struct RootView: View {
     @State private var sheet: SheetRoute?
     @State private var toastText: String?
     @State private var toastOK: Bool = true
-
-    @Namespace private var tabNamespace
+    @State private var chrome = ScrollChrome()
 
     var body: some View {
         ZStack {
@@ -34,10 +33,13 @@ struct RootView: View {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            plusButtonLayer
+            topBarLayer
             tabBarLayer
             sheetLayer
             toastLayer
+        }
+        .onPreferenceChange(ScrollOffsetKey.self) { value in
+            chrome.update(value)
         }
         .preferredColorScheme(settings.colorScheme)
         .onAppear(perform: bootstrap)
@@ -89,67 +91,42 @@ struct RootView: View {
         }
     }
 
+    private var navTitle: String {
+        switch tab {
+        case .today: return "今天"
+        case .tasks: return "任务"
+        case .capture: return "记录"
+        case .settings: return "设置"
+        }
+    }
+
+    private var showsPlus: Bool {
+        tab == .today || tab == .tasks
+    }
+
+    // MARK: - Top bar
+
+    private var topBarLayer: some View {
+        VStack(spacing: 0) {
+            TopBarView(chrome: chrome,
+                       title: navTitle,
+                       showsPlus: showsPlus,
+                       onPlus: { sheet = .newTask })
+            Spacer(minLength: 0)
+        }
+        .zIndex(6)
+    }
+
     // MARK: - Tab bar
 
     private var tabBarLayer: some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 0) {
-                ForEach(AppTab.allCases) { item in
-                    Button(action: { select(item) }) {
-                        VStack(spacing: 3) {
-                            Image(systemName: item.icon)
-                                .font(.system(size: 19, weight: .regular))
-                            Text(item.title)
-                                .font(Theme.font(10.5, tab == item ? .semibold : .regular))
-                        }
-                        .foregroundColor(tab == item ? Theme.blue : Theme.label2)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background {
-                            if tab == item {
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .fill(Theme.fill)
-                                    .matchedGeometryEffect(id: "tabIndicator", in: tabNamespace)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(6)
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Theme.glass))
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Material.ultraThinMaterial))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Theme.glassBorder, lineWidth: 0.5))
-            .shadow(color: Theme.shadow, radius: 18, x: 0, y: 10)
-            .padding(.horizontal, 14)
-            .padding(.bottom, 8)
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            TabBarView(chrome: chrome,
+                       tab: tab,
+                       onSelect: { select($0) })
         }
-        .animation(.spring(response: 0.42, dampingFraction: 0.86), value: tab)
         .zIndex(5)
-    }
-
-    // MARK: - Floating plus
-
-    private var plusButtonLayer: some View {
-        VStack {
-            HStack {
-                Spacer()
-                if tab == .today || tab == .tasks {
-                    GlassCircleButton(icon: "plus", size: 44) {
-                        sheet = .newTask
-                    }
-                    .transition(.scale.combined(with: .opacity))
-                }
-            }
-            .padding(.trailing, 18)
-            .padding(.top, 6)
-            Spacer()
-        }
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: tab)
-        .zIndex(4)
     }
 
     // MARK: - Sheet
@@ -223,7 +200,7 @@ struct RootView: View {
         VStack {
             if let text = toastText {
                 ToastBanner(text: text, ok: toastOK)
-                    .padding(.top, 8)
+                    .padding(.top, 6)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
             Spacer()
@@ -248,6 +225,7 @@ struct RootView: View {
     private func select(_ newTab: AppTab) {
         guard tab != newTab else { return }
         Haptics.tap()
+        chrome.reset()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
             tab = newTab
         }
@@ -262,5 +240,107 @@ struct RootView: View {
         } else {
             store.syncNotifications(enabled: false)
         }
+    }
+}
+
+// MARK: - 顶栏（对应 HTML .topbar）
+
+private struct TopBarView: View {
+    @ObservedObject var chrome: ScrollChrome
+    let title: String
+    let showsPlus: Bool
+    let onPlus: () -> Void
+
+    var body: some View {
+        let p = chrome.topBarOpacity
+        ZStack(alignment: .bottom) {
+            ZStack {
+                Rectangle().fill(Material.ultraThinMaterial)
+                Rectangle().fill(Theme.navBg)
+            }
+            .opacity(p)
+            .ignoresSafeArea(edges: .top)
+            .allowsHitTesting(false)
+
+            Rectangle()
+                .fill(Theme.separator)
+                .frame(height: 0.5)
+                .opacity(p)
+                .allowsHitTesting(false)
+
+            Text(title)
+                .font(Theme.font(17, .semibold))
+                .foregroundColor(Theme.label)
+                .opacity(p)
+                .padding(.bottom, 12)
+                .allowsHitTesting(false)
+
+            HStack {
+                Spacer(minLength: 0)
+                if showsPlus {
+                    GlassCircleButton(icon: "plus", size: 44, action: onPlus)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 2)
+            .animation(.spring(response: 0.32, dampingFraction: 0.82), value: showsPlus)
+        }
+        .frame(height: 48)
+    }
+}
+
+// MARK: - 底部 tab bar（对应 HTML .tabbar / .mini）
+
+private struct TabBarView: View {
+    @ObservedObject var chrome: ScrollChrome
+    let tab: AppTab
+    let onSelect: (AppTab) -> Void
+
+    @Namespace private var ns
+
+    var body: some View {
+        let mini = chrome.mini
+        HStack(spacing: 0) {
+            ForEach(AppTab.allCases) { item in
+                Button(action: { onSelect(item) }) {
+                    VStack(spacing: 2) {
+                        Image(systemName: item.icon)
+                            .font(.system(size: 24, weight: .regular))
+                        Text(item.title)
+                            .font(Theme.font(10.5, .semibold))
+                            .frame(height: mini ? 0 : 14)
+                            .clipped()
+                            .opacity(mini ? 0 : 1)
+                    }
+                    .foregroundColor(tab == item ? Theme.blue : Theme.label)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: mini ? 44 : 56)
+                    .background {
+                        if tab == item {
+                            Capsule()
+                                .fill(Theme.fill2)
+                                .matchedGeometryEffect(id: "tabPill", in: ns)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(
+            ZStack {
+                Capsule().fill(Material.ultraThinMaterial)
+                Capsule().fill(Theme.tabGlass)
+            }
+        )
+        .overlay(Capsule().strokeBorder(Theme.glassBorder, lineWidth: 0.5))
+        .shadow(color: Theme.shadow, radius: 18, x: 0, y: 10)
+        .padding(.horizontal, 21)
+        .padding(.bottom, 14)
+        .scaleEffect(mini ? 0.94 : 1, anchor: .bottom)
+        .animation(.spring(response: 0.45, dampingFraction: 0.88), value: mini)
+        .animation(.spring(response: 0.45, dampingFraction: 0.85), value: tab)
     }
 }

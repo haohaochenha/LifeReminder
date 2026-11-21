@@ -59,10 +59,12 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 8)
             }
+            .background(ScrollTracker())
             .padding(.horizontal, 20)
             .padding(.top, 54)
             .padding(.bottom, 120)
         }
+        .coordinateSpace(name: ScrollChrome.spaceName)
         .onAppear(perform: refreshStatus)
         .onChange(of: scenePhase) { phase in
             if phase == .active { refreshStatus() }
