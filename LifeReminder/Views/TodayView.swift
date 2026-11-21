@@ -19,12 +19,14 @@ struct TodayView: View {
          addTask: @escaping () -> Void,
          editTask: @escaping (TaskItem) -> Void,
          addAnniversary: @escaping () -> Void,
+         editAnniversary: @escaping (Anniversary) -> Void,
          toast: @escaping (String, Bool) -> Void) {
         self.openCapture = openCapture
         self.openTasks = openTasks
         self.addTask = addTask
         self.editTask = editTask
         self.addAnniversary = addAnniversary
+        self.editAnniversary = editAnniversary
         self.toast = toast
     }
 
