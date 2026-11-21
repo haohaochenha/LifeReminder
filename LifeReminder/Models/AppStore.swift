@@ -4,12 +4,14 @@ import Combine
 final class AppStore: ObservableObject {
     @Published private(set) var tasks: [TaskItem] = []
     @Published private(set) var ideas: [IdeaNote] = []
+    @Published private(set) var anniversaries: [Anniversary] = []
 
     private var saveWorkItem: DispatchWorkItem?
 
     private struct Snapshot: Codable {
         var tasks: [TaskItem]
         var ideas: [IdeaNote]
+        var anniversaries: [Anniversary]?
     }
 
     private var directoryURL: URL {
@@ -37,7 +39,6 @@ final class AppStore: ObservableObject {
             .sorted { ($0.completedAt ?? $0.dueDate) > ($1.completedAt ?? $1.dueDate) }
     }
 
-    /// 今天到期的未完成任务 + 已逾期任务。
     var todayTasks: [TaskItem] {
         activeTasks.filter { $0.isToday || $0.isOverdue }
     }
@@ -63,7 +64,7 @@ final class AppStore: ObservableObject {
         ideas.sorted { $0.createdAt > $1.createdAt }
     }
 
-    // MARK: - Mutations
+    // MARK: - Task mutations
 
     func add(_ task: TaskItem) {
         tasks.append(task)
@@ -94,6 +95,8 @@ final class AppStore: ObservableObject {
         persist()
     }
 
+    // MARK: - Ideas
+
     func addIdea(_ idea: IdeaNote) {
         ideas.insert(idea, at: 0)
         if ideas.count > 120 {
@@ -108,6 +111,20 @@ final class AppStore: ObservableObject {
         persist()
     }
 
+    // MARK: - Anniversaries
+
+    func addAnniversary(_ item: Anniversary) {
+        anniversaries.append(item)
+        persist()
+    }
+
+    func deleteAnniversary(_ item: Anniversary) {
+        anniversaries.removeAll { $0.id == item.id }
+        persist()
+    }
+
+    // MARK: - Maintenance
+
     func clearCompleted() {
         tasks.removeAll { $0.isDone }
         persist()
@@ -116,6 +133,7 @@ final class AppStore: ObservableObject {
     func resetEverything() {
         tasks = []
         ideas = []
+        anniversaries = []
         persist()
     }
 
@@ -135,6 +153,7 @@ final class AppStore: ObservableObject {
         }
         tasks = snapshot.tasks
         ideas = snapshot.ideas
+        anniversaries = snapshot.anniversaries ?? []
     }
 
     private func seed() {
@@ -144,16 +163,17 @@ final class AppStore: ObservableObject {
         if evening <= now {
             evening = now.addingTimeInterval(5 * 3600)
         }
-        let examples = [
+
+        tasks = [
             TaskItem(title: "喝一杯水，伸个懒腰",
-                     note: "长按任务可以编辑或删除",
+                     note: "左滑可以删除，点一下可以编辑",
                      tag: "健康",
                      dueDate: now.addingTimeInterval(45 * 60),
                      priority: .normal,
                      leadMinutes: 5,
                      createdAt: now.addingTimeInterval(-10 * 60)),
             TaskItem(title: "整理明天最重要的三件事",
-                     note: "想清楚再睡觉，明天会更轻松",
+                     note: "想清楚再睡，明天会轻松一点",
                      tag: "计划",
                      dueDate: now.addingTimeInterval(3 * 3600),
                      priority: .high,
@@ -167,7 +187,14 @@ final class AppStore: ObservableObject {
                      leadMinutes: 15,
                      createdAt: now)
         ]
-        tasks = examples
+
+        let start = calendar.startOfDay(for: calendar.date(byAdding: .day, value: -30, to: now) ?? now)
+        let spring = calendar.date(from: DateComponents(year: 2027, month: 2, day: 6)) ?? now
+        anniversaries = [
+            Anniversary(title: "开始记录生活", date: start),
+            Anniversary(title: "下一个春节", date: spring)
+        ]
+
         persist()
     }
 
@@ -181,7 +208,7 @@ final class AppStore: ObservableObject {
     }
 
     private func writeToDisk() {
-        let snapshot = Snapshot(tasks: tasks, ideas: ideas)
+        let snapshot = Snapshot(tasks: tasks, ideas: ideas, anniversaries: anniversaries)
         do {
             try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
             let encoder = JSONEncoder()

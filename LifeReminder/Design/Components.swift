@@ -1,18 +1,279 @@
 import SwiftUI
-import UIKit
 
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .opacity(configuration.isPressed ? 0.9 : 1)
-            .animation(.spring(response: 0.28, dampingFraction: 0.72), value: configuration.isPressed)
+            .animation(.spring(response: 0.26, dampingFraction: 0.75), value: configuration.isPressed)
+    }
+}
+
+struct IconTile: View {
+    let color: Color
+    let icon: String
+    var size: CGFloat = 30
+    var circle: Bool = false
+
+    var body: some View {
+        ZStack {
+            Group {
+                if circle {
+                    Circle().fill(color)
+                } else {
+                    RoundedRectangle(cornerRadius: size * 0.27, style: .continuous).fill(color)
+                }
+            }
+            Image(systemName: icon)
+                .font(.system(size: size * (circle ? 0.5 : 0.55), weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+struct GroupCard<Content: View>: View {
+    var radius: CGFloat = 24
+    let content: Content
+
+    init(radius: CGFloat = 24, @ViewBuilder content: () -> Content) {
+        self.radius = radius
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content
+        }
+        .glassCard(radius: radius)
+    }
+}
+
+struct CellDivider: View {
+    var inset: CGFloat = 16
+
+    var body: some View {
+        Rectangle()
+            .fill(Theme.separator)
+            .frame(height: 0.5)
+            .padding(.leading, inset)
+    }
+}
+
+struct FormCell<Content: View>: View {
+    var icon: String? = nil
+    var iconColor: Color = Theme.blue
+    var title: String? = nil
+    var minHeight: CGFloat = 54
+    let content: Content
+
+    init(icon: String? = nil,
+         iconColor: Color = Theme.blue,
+         title: String? = nil,
+         minHeight: CGFloat = 54,
+         @ViewBuilder content: () -> Content) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.minHeight = minHeight
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if let icon = icon {
+                IconTile(color: iconColor, icon: icon)
+            }
+            if let title = title {
+                Text(title)
+                    .font(Theme.font(17))
+                    .foregroundColor(Theme.label)
+                    .frame(width: 76, alignment: .leading)
+            }
+            content
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: minHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct SectionTitle: View {
+    var title: String
+    var trailing: String? = nil
+    var actionTitle: String? = nil
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(Theme.font(22, .bold))
+                .foregroundColor(Theme.label)
+            Spacer(minLength: 8)
+            if let actionTitle = actionTitle, let action = action {
+                Button(action: {
+                    Haptics.tap()
+                    action()
+                }) {
+                    Text(actionTitle)
+                        .font(Theme.font(15, .medium))
+                        .foregroundColor(Theme.blue)
+                }
+                .buttonStyle(.plain)
+            } else if let trailing = trailing {
+                Text(trailing)
+                    .font(Theme.font(15))
+                    .foregroundColor(Theme.label2)
+            }
+        }
+    }
+}
+
+struct SegmentedControl: View {
+    let items: [String]
+    @Binding var selection: Int
+    @Namespace private var namespace
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(items.indices, id: \.self) { index in
+                Button(action: {
+                    Haptics.tap()
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                        selection = index
+                    }
+                }) {
+                    Text(items[index])
+                        .font(Theme.font(14, selection == index ? .semibold : .regular))
+                        .foregroundColor(selection == index ? Theme.label : Theme.label2)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 34)
+                        .background {
+                            if selection == index {
+                                Capsule()
+                                    .fill(Theme.segment)
+                                    .matchedGeometryEffect(id: "segment", in: namespace)
+                                    .shadow(color: Color.black.opacity(0.12), radius: 4, x: 0, y: 3)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(3)
+        .background(Capsule().fill(Theme.fill))
+    }
+}
+
+struct RingProgress: View {
+    var progress: Double
+
+    var body: some View {
+        let value = min(1, max(0, progress))
+        ZStack {
+            GeometryReader { _ in
+                ZStack {
+                    Circle()
+                        .stroke(Theme.fill, lineWidth: 10)
+                        .padding(10)
+                    Circle()
+                        .stroke(Theme.label3, style: StrokeStyle(lineWidth: 1.4, dash: [1, 8.1]))
+                        .padding(1)
+                    Circle()
+                        .trim(from: 0, to: CGFloat(max(0.001, value)))
+                        .stroke(
+                            LinearGradient(colors: [Color(hex: 0x5AC8FA), Theme.indigo],
+                                           startPoint: .topLeading,
+                                           endPoint: .bottomTrailing),
+                            style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                        )
+                        .padding(10)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeOut(duration: 1.1), value: value)
+                }
+            }
+
+            VStack(spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text("\(Int((value * 100).rounded()))")
+                        .font(Theme.num(36))
+                        .foregroundColor(Theme.label)
+                    Text("%")
+                        .font(Theme.font(15, .semibold))
+                        .foregroundColor(Theme.label2)
+                }
+                Text("已临近")
+                    .font(Theme.font(11, .medium))
+                    .foregroundColor(Theme.label2)
+            }
+        }
+        .frame(width: 120, height: 120)
+    }
+}
+
+struct TaskCheck: View {
+    let done: Bool
+    let color: Color
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            Haptics.success()
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                action()
+            }
+        }) {
+            ZStack {
+                Circle()
+                    .strokeBorder(done ? Color.clear : color, lineWidth: 1.5)
+                if done {
+                    Circle().fill(color)
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .frame(width: 26, height: 26)
+            .scaleEffect(done ? 1.06 : 1)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct StatTile: View {
+    let icon: String
+    let tint: Color
+    let value: String
+    let label: String
+    var action: () -> Void = {}
+
+    var body: some View {
+        Button(action: {
+            Haptics.tap()
+            action()
+        }) {
+            VStack(alignment: .leading, spacing: 8) {
+                IconTile(color: tint, icon: icon, size: 34, circle: true)
+                Text(value)
+                    .font(Theme.num(30))
+                    .foregroundColor(Theme.label)
+                Text(label)
+                    .font(Theme.font(15, .semibold))
+                    .foregroundColor(Theme.label2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .glassCard(radius: 22)
+        }
+        .buttonStyle(PressableStyle())
     }
 }
 
 struct PrimaryButton: View {
     let title: String
-    var icon: String = "sparkles"
+    var icon: String? = nil
     var isLoading: Bool = false
     var enabled: Bool = true
     var action: () -> Void
@@ -23,32 +284,31 @@ struct PrimaryButton: View {
             Haptics.tap()
             action()
         }) {
-            HStack(spacing: 9) {
+            HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(0.85)
-                } else {
+                        .scaleEffect(0.8)
+                } else if let icon = icon {
                     Image(systemName: icon)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 17, weight: .semibold))
                 }
                 Text(title)
-                    .font(Theme.rounded(17, .bold))
+                    .font(Theme.font(17, .semibold))
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(Capsule().fill(Theme.brand))
-            .overlay(Capsule().strokeBorder(Color.white.opacity(0.5), lineWidth: 1))
-            .shadow(color: Theme.teal.opacity(enabled ? 0.32 : 0), radius: 18, x: 0, y: 10)
-            .opacity(enabled ? 1 : 0.55)
+            .frame(height: 52)
+            .background(Capsule().fill(Theme.blue))
+            .shadow(color: Theme.blue.opacity(enabled ? 0.35 : 0), radius: 12, x: 0, y: 8)
+            .opacity(enabled ? 1 : 0.35)
         }
         .buttonStyle(PressableStyle())
         .disabled(!enabled || isLoading)
     }
 }
 
-struct GhostButton: View {
+struct SecondaryButton: View {
     let title: String
     var icon: String? = nil
     var action: () -> Void
@@ -58,29 +318,51 @@ struct GhostButton: View {
             Haptics.tap()
             action()
         }) {
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 if let icon = icon {
                     Image(systemName: icon)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 17, weight: .semibold))
                 }
                 Text(title)
-                    .font(Theme.rounded(15, .semibold))
+                    .font(Theme.font(17, .semibold))
             }
-            .foregroundColor(Theme.ink)
+            .foregroundColor(Theme.blue)
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .background(Capsule().fill(Color.white.opacity(0.55)))
-            .overlay(Capsule().strokeBorder(Color.white.opacity(0.85), lineWidth: 1))
-            .shadow(color: Theme.deep.opacity(0.08), radius: 12, x: 0, y: 6)
+            .frame(height: 52)
+            .background(Capsule().fill(Theme.fill))
         }
         .buttonStyle(PressableStyle())
     }
 }
 
-struct GlassIconButton: View {
+struct MiniPillButton: View {
+    let title: String
+    var enabled: Bool = true
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            guard enabled else { return }
+            Haptics.tap()
+            action()
+        }) {
+            Text(title)
+                .font(Theme.font(14, .semibold))
+                .foregroundColor(Theme.blue)
+                .padding(.horizontal, 14)
+                .frame(height: 32)
+                .background(Capsule().fill(Theme.fill))
+                .opacity(enabled ? 1 : 0.4)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+    }
+}
+
+struct GlassCircleButton: View {
     let icon: String
     var size: CGFloat = 44
-    var tint: Color = Theme.ink
+    var tint: Color = Theme.blue
     var action: () -> Void
 
     var body: some View {
@@ -89,249 +371,100 @@ struct GlassIconButton: View {
             action()
         }) {
             Image(systemName: icon)
-                .font(.system(size: size * 0.38, weight: .semibold))
+                .font(.system(size: size * 0.42, weight: .semibold))
                 .foregroundColor(tint)
                 .frame(width: size, height: size)
-                .background(Circle().fill(Color.white.opacity(0.6)))
-                .overlay(Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1))
-                .shadow(color: Theme.deep.opacity(0.12), radius: 12, x: 0, y: 6)
+                .background(Circle().fill(Theme.glass))
+                .background(Circle().fill(Material.ultraThinMaterial))
+                .overlay(Circle().strokeBorder(Theme.glassBorder, lineWidth: 0.5))
+                .shadow(color: Theme.shadow, radius: 12, x: 0, y: 6)
         }
         .buttonStyle(PressableStyle())
     }
 }
 
-struct SectionHeader: View {
-    let title: String
-    var subtitle: String? = nil
-    var trailing: String? = nil
+struct WaveformView: View {
+    var isRecording: Bool
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(Theme.rounded(18, .bold))
-                    .foregroundColor(Theme.ink)
-                if let subtitle = subtitle {
-                    Text(subtitle)
-                        .font(Theme.rounded(12, .medium))
-                        .foregroundColor(Theme.subInk)
+        Group {
+            if isRecording {
+                TimelineView(.animation) { context in
+                    bars(time: context.date.timeIntervalSinceReferenceDate)
                 }
-            }
-            Spacer(minLength: 8)
-            if let trailing = trailing {
-                Text(trailing)
-                    .font(Theme.rounded(13, .semibold))
-                    .foregroundColor(Theme.teal)
+            } else {
+                bars(time: 0)
             }
         }
+        .frame(height: 44)
+        .animation(.easeOut(duration: 0.2), value: isRecording)
     }
-}
 
-struct StatPill: View {
-    let title: String
-    let value: String
-    var tint: Color = Theme.deep
-
-    var body: some View {
-        VStack(spacing: 3) {
-            Text(value)
-                .font(Theme.rounded(20, .bold))
-                .foregroundColor(tint)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(title)
-                .font(Theme.rounded(11, .medium))
-                .foregroundColor(Theme.subInk)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .glass(radius: 18, tint: 0.34)
-    }
-}
-
-struct FilterChip: View {
-    let title: String
-    let selected: Bool
-    var action: () -> Void
-
-    var body: some View {
-        Button(action: {
-            Haptics.soft()
-            action()
-        }) {
-            Text(title)
-                .font(Theme.rounded(14, .semibold))
-                .foregroundColor(selected ? .white : Theme.subInk)
-                .padding(.horizontal, 16)
-                .frame(height: 36)
-                .background(
-                    Capsule().fill(selected ? AnyShapeStyle(Theme.brandBar) : AnyShapeStyle(Color.white.opacity(0.55)))
-                )
-                .overlay(Capsule().strokeBorder(Color.white.opacity(selected ? 0.45 : 0.85), lineWidth: 1))
-                .shadow(color: selected ? Theme.teal.opacity(0.25) : Color.clear, radius: 10, x: 0, y: 5)
-        }
-        .buttonStyle(PressableStyle())
-    }
-}
-
-struct TaskCheck: View {
-    let done: Bool
-    var action: () -> Void
-
-    var body: some View {
-        Button(action: {
-            Haptics.success()
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
-                action()
-            }
-        }) {
-            ZStack {
-                Circle()
-                    .fill(done ? AnyShapeStyle(Theme.brandBar) : AnyShapeStyle(Color.white.opacity(0.75)))
-                    .frame(width: 26, height: 26)
-                    .overlay(
-                        Circle().strokeBorder(done ? Color.white.opacity(0.5) : Theme.deep.opacity(0.18), lineWidth: 1.4)
-                    )
-                if done {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                }
-            }
-        }
-        .buttonStyle(PressableStyle())
-    }
-}
-
-struct PriorityTag: View {
-    let priority: TaskPriority
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(priority.color)
-                .frame(width: 6, height: 6)
-            Text(priority.label)
-                .font(Theme.rounded(11, .semibold))
-                .foregroundColor(priority.color)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(Capsule().fill(priority.color.opacity(0.12)))
-    }
-}
-
-struct TagChip: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(Theme.rounded(11, .semibold))
-            .foregroundColor(Theme.deep)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(Theme.teal.opacity(0.10)))
-    }
-}
-
-struct WaveformBars: View {
-    var level: CGFloat
-    var color: Color = .white
-
-    private let factors: [CGFloat] = [0.35, 0.6, 0.95, 0.5, 1.0, 0.55, 0.85, 0.45, 0.3]
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 4) {
-            ForEach(0..<factors.count, id: \.self) { i in
+    private func bars(time: TimeInterval) -> some View {
+        HStack(spacing: 3) {
+            ForEach(0..<40, id: \.self) { index in
                 Capsule()
-                    .fill(color.opacity(0.92))
-                    .frame(width: 4, height: height(i))
+                    .fill(isRecording ? Theme.red : Theme.label3)
+                    .frame(width: 3, height: height(index: index, time: time))
             }
         }
-        .animation(.easeOut(duration: 0.12), value: level)
     }
 
-    private func height(_ index: Int) -> CGFloat {
-        let factor = factors[index % factors.count]
-        return 6 + max(0.06, min(1, level)) * 32 * factor
+    private func height(index: Int, time: TimeInterval) -> CGFloat {
+        guard isRecording else { return 4 }
+        let center = 1 - abs(Double(index) - 19.5) / 20
+        let wave = abs(sin(time * 6 + Double(index) * 0.6))
+        return 4 + CGFloat(wave * 38 * center) + 2
     }
 }
 
 struct EmptyStateView: View {
     let icon: String
-    let title: String
     let message: String
 
     var body: some View {
-        VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Theme.teal.opacity(0.10))
-                    .frame(width: 72, height: 72)
-                Image(systemName: icon)
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(Theme.teal)
-            }
-            Text(title)
-                .font(Theme.rounded(17, .bold))
-                .foregroundColor(Theme.ink)
+        VStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 42, weight: .light))
+                .foregroundColor(Theme.label3)
             Text(message)
-                .font(Theme.rounded(13, .regular))
-                .foregroundColor(Theme.subInk)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
+                .font(Theme.font(15))
+                .foregroundColor(Theme.label2)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 34)
-        .padding(.horizontal, 20)
-        .glass(radius: 24, tint: 0.3)
+        .padding(.vertical, 44)
     }
 }
 
-struct LabeledField: View {
-    let title: String
-    var placeholder: String
-    @Binding var text: String
-    var icon: String = "key.fill"
-    var secure: Bool = false
-    var keyboard: UIKeyboardType = .default
+struct ToastBanner: View {
+    let text: String
+    var ok: Bool = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text(title)
-                .font(Theme.rounded(12, .semibold))
-                .foregroundColor(Theme.subInk)
-
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Theme.teal)
-                    .frame(width: 18)
-
-                if secure {
-                    SecureField(placeholder, text: $text)
-                        .font(Theme.rounded(15, .medium))
-                        .foregroundColor(Theme.ink)
-                        .accentColor(Theme.teal)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                } else {
-                    TextField(placeholder, text: $text)
-                        .font(Theme.rounded(15, .medium))
-                        .foregroundColor(Theme.ink)
-                        .accentColor(Theme.teal)
-                        .keyboardType(keyboard)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                }
-            }
-            .padding(.horizontal, 14)
-            .frame(height: 48)
-            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.62)))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.9), lineWidth: 1)
-            )
+        HStack(spacing: 8) {
+            Circle()
+                .fill(ok ? Theme.blue : Theme.red)
+                .frame(width: 8, height: 8)
+            Text(text)
+                .font(Theme.font(15, .semibold))
+                .foregroundColor(Theme.label)
         }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 11)
+        .background(Capsule().fill(Theme.glass))
+        .background(Capsule().fill(Material.ultraThinMaterial))
+        .overlay(Capsule().strokeBorder(Theme.glassBorder, lineWidth: 0.5))
+        .shadow(color: Theme.shadow, radius: 14, x: 0, y: 8)
+    }
+}
+
+struct GFCaption: View {
+    var text: String
+
+    var body: some View {
+        Text(text)
+            .font(Theme.font(13))
+            .foregroundColor(Theme.label2)
+            .lineSpacing(3)
     }
 }

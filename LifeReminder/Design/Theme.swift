@@ -1,6 +1,15 @@
 import SwiftUI
 import UIKit
 
+extension UIColor {
+    convenience init(hex: UInt32, alpha: CGFloat = 1) {
+        self.init(red: CGFloat((hex >> 16) & 0xFF) / 255,
+                  green: CGFloat((hex >> 8) & 0xFF) / 255,
+                  blue: CGFloat(hex & 0xFF) / 255,
+                  alpha: alpha)
+    }
+}
+
 extension Color {
     init(hex: UInt32, alpha: Double = 1) {
         self.init(.sRGB,
@@ -9,65 +18,85 @@ extension Color {
                   blue: Double(hex & 0xFF) / 255,
                   opacity: alpha)
     }
+
+    /// 跟随系统（或 App 内强制）深浅色自动切换的颜色。
+    static func dynamic(light: UInt32,
+                        dark: UInt32,
+                        lightAlpha: CGFloat = 1,
+                        darkAlpha: CGFloat = 1) -> Color {
+        Color(UIColor { trait in
+            let isDark = trait.userInterfaceStyle == .dark
+            return UIColor(hex: isDark ? dark : light, alpha: isDark ? darkAlpha : lightAlpha)
+        })
+    }
 }
 
 enum Theme {
-    static let teal = Color(hex: 0x0EA5A0)
-    static let deep = Color(hex: 0x0F766E)
-    static let mint = Color(hex: 0x5EEAD4)
-    static let sky = Color(hex: 0x38BDF8)
-    static let blue = Color(hex: 0x3B82F6)
-    static let amber = Color(hex: 0xF59E0B)
-    static let coral = Color(hex: 0xF87171)
-    static let ink = Color(hex: 0x0E2A2C)
-    static let subInk = Color(hex: 0x5C7376)
-    static let faint = Color(hex: 0x8FA3A5)
+    // 背景与文字
+    static let bg = Color.dynamic(light: 0xF2F2F7, dark: 0x000000)
+    static let card = Color.dynamic(light: 0xFFFFFF, dark: 0x1C1C1E)
+    static let label = Color.dynamic(light: 0x000000, dark: 0xFFFFFF)
+    static let label2 = Color.dynamic(light: 0x3C3C43, dark: 0xEBEBF5, lightAlpha: 0.6, darkAlpha: 0.6)
+    static let label3 = Color.dynamic(light: 0x3C3C43, dark: 0xEBEBF5, lightAlpha: 0.3, darkAlpha: 0.3)
+    static let separator = Color.dynamic(light: 0x3C3C43, dark: 0x545458, lightAlpha: 0.13, darkAlpha: 0.55)
+    static let fill = Color.dynamic(light: 0x787880, dark: 0x787880, lightAlpha: 0.12, darkAlpha: 0.24)
+    static let fill2 = Color.dynamic(light: 0x787880, dark: 0x787880, lightAlpha: 0.18, darkAlpha: 0.32)
+    static let segment = Color.dynamic(light: 0xFFFFFF, dark: 0x636366)
 
-    static var brand: LinearGradient {
-        LinearGradient(colors: [Color(hex: 0x0F766E), Color(hex: 0x0EA5A0), Color(hex: 0x38BDF8)],
-                       startPoint: .topLeading,
-                       endPoint: .bottomTrailing)
+    // 玻璃
+    static let glass = Color(UIColor { trait in
+        UIColor.white.withAlphaComponent(trait.userInterfaceStyle == .dark ? 0.075 : 0.52)
+    })
+    static let glassBorder = Color(UIColor { trait in
+        UIColor.white.withAlphaComponent(trait.userInterfaceStyle == .dark ? 0.14 : 0.78)
+    })
+    static let navBg = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(hex: 0x000000, alpha: 0.72)
+            : UIColor(hex: 0xF2F2F7, alpha: 0.72)
+    })
+    static let shadow = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor.black.withAlphaComponent(0.55)
+            : UIColor(hex: 0x28468C, alpha: 0.20)
+    })
+
+    // 强调色
+    static let blue = Color(hex: 0x0088FF)
+    static let red = Color(hex: 0xFF383C)
+    static let orange = Color(hex: 0xFF8D28)
+    static let green = Color(hex: 0x34C759)
+    static let indigo = Color(hex: 0x6155F5)
+    static let gray = Color(hex: 0x8E8E93)
+    static let pink = Color(hex: 0xFF375F)
+
+    // 背景光斑
+    static let k1 = Color(hex: 0x0088FF, alpha: 0.34)
+    static let k2 = Color(hex: 0x6155F5, alpha: 0.28)
+    static let k3 = Color(hex: 0xFF8D28, alpha: 0.26)
+    static let k4 = Color(hex: 0x00C8E6, alpha: 0.28)
+
+    static func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight)
     }
 
-    static var brandBar: LinearGradient {
-        LinearGradient(colors: [Color(hex: 0x14B8A6), Color(hex: 0x38BDF8)],
-                       startPoint: .leading,
-                       endPoint: .trailing)
-    }
-
-    static var warm: LinearGradient {
-        LinearGradient(colors: [Color(hex: 0xFBBF24), Color(hex: 0xF97316)],
-                       startPoint: .topLeading,
-                       endPoint: .bottomTrailing)
-    }
-
-    static var cardStroke: LinearGradient {
-        LinearGradient(colors: [Color.white.opacity(0.95), Color.white.opacity(0.35)],
-                       startPoint: .topLeading,
-                       endPoint: .bottomTrailing)
-    }
-
-    static func rounded(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight, design: .rounded)
-    }
-
-    static func mono(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight, design: .rounded).monospacedDigit()
+    static func num(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
+        .system(size: size, weight: weight).monospacedDigit()
     }
 }
 
 enum Fmt {
-    private static let monthDayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "zh_CN")
-        f.dateFormat = "M月d日"
-        return f
-    }()
-
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "zh_CN")
         f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    private static let monthDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "zh_CN")
+        f.dateFormat = "M月d日"
         return f
     }()
 
@@ -78,17 +107,41 @@ enum Fmt {
         return f
     }()
 
-    static let weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+    private static let yearFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "zh_CN")
+        f.dateFormat = "yyyy年M月d日"
+        return f
+    }()
 
-    static func monthDay(_ date: Date) -> String { monthDayFormatter.string(from: date) }
+    static let weekdays = ["日", "一", "二", "三", "四", "五", "六"]
 
     static func time(_ date: Date) -> String { timeFormatter.string(from: date) }
 
+    static func monthDay(_ date: Date) -> String { monthDayFormatter.string(from: date) }
+
     static func full(_ date: Date) -> String { fullFormatter.string(from: date) }
+
+    static func yearDate(_ date: Date) -> String { yearFormatter.string(from: date) }
 
     static func weekday(_ date: Date) -> String {
         let index = Calendar.current.component(.weekday, from: date) - 1
         return weekdays[max(0, min(6, index))]
+    }
+
+    static func dateLine(_ date: Date) -> String {
+        "\(monthDay(date)) · 周\(weekday(date))"
+    }
+
+    static func greeting(_ date: Date = Date()) -> String {
+        let hour = Calendar.current.component(.hour, from: date)
+        switch hour {
+        case 0..<6: return "夜深了"
+        case 6..<11: return "早上好"
+        case 11..<14: return "中午好"
+        case 14..<18: return "下午好"
+        default: return "晚上好"
+        }
     }
 
     static func relativeDay(_ date: Date) -> String {
@@ -109,85 +162,111 @@ enum Fmt {
         let days = total / 86400
         let hours = (total % 86400) / 3600
         let minutes = (total % 3600) / 60
-        let seconds = total % 60
         if days > 0 { return "\(days) 天 \(hours) 小时" }
         if hours > 0 { return "\(hours) 小时 \(minutes) 分" }
-        if minutes > 0 { return "\(minutes) 分 \(seconds) 秒" }
-        return "\(seconds) 秒"
+        return "\(max(1, minutes)) 分钟"
     }
 
     static func clock(_ seconds: TimeInterval) -> String {
         let total = max(0, Int(seconds))
         return String(format: "%02d:%02d", total / 60, total % 60)
     }
+
+    static func countdown(_ interval: TimeInterval) -> (hours: Int, minutes: Int, seconds: Int) {
+        let total = max(0, Int(interval))
+        return (total / 3600, (total % 3600) / 60, total % 60)
+    }
 }
 
 enum Haptics {
+    static var enabled = true
+
     static func tap() {
+        guard enabled else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
     static func soft() {
+        guard enabled else { return }
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
     }
 
     static func success() {
+        guard enabled else { return }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     static func warning() {
+        guard enabled else { return }
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
 }
 
 struct AuroraBackground: View {
+    @State private var drift = false
+
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: 0xF2FBF9),
-                                    Color(hex: 0xF0F7FF),
-                                    Color(hex: 0xFFF9F2)],
-                           startPoint: .top,
-                           endPoint: .bottom)
+            Theme.bg
 
-            Circle()
-                .fill(Theme.mint.opacity(0.40))
-                .frame(width: 320, height: 320)
-                .blur(radius: 90)
-                .offset(x: -160, y: -320)
-
-            Circle()
-                .fill(Theme.sky.opacity(0.26))
-                .frame(width: 340, height: 340)
-                .blur(radius: 100)
-                .offset(x: 180, y: -170)
-
-            Circle()
-                .fill(Theme.amber.opacity(0.16))
-                .frame(width: 280, height: 280)
-                .blur(radius: 100)
-                .offset(x: -140, y: 330)
+            blob(Theme.k1, size: 300)
+                .offset(x: drift ? -30 : -100, y: drift ? 20 : -70)
+            blob(Theme.k2, size: 280)
+                .offset(x: drift ? 140 : 200, y: drift ? 180 : 250)
+            blob(Theme.k3, size: 300)
+                .offset(x: drift ? -20 : -90, y: drift ? 590 : 520)
+            blob(Theme.k4, size: 260)
+                .offset(x: drift ? 150 : 210, y: drift ? 660 : 730)
         }
         .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .animation(.easeInOut(duration: 19).repeatForever(autoreverses: true), value: drift)
+        .onAppear { drift = true }
+    }
+
+    private func blob(_ color: Color, size: CGFloat) -> some View {
+        Circle()
+            .fill(color)
+            .frame(width: size, height: size)
+            .blur(radius: 64)
     }
 }
 
-struct GlassSurface: ViewModifier {
-    var radius: CGFloat = 26
-    var tint: Double = 0.42
+struct GlassCard: ViewModifier {
+    var radius: CGFloat = 24
+    var shadow: Bool = true
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return content
-            .background(shape.fill(Color.white.opacity(tint)))
+            .background(shape.fill(Theme.glass))
             .background(shape.fill(Material.ultraThinMaterial))
-            .overlay(shape.strokeBorder(Theme.cardStroke, lineWidth: 1))
+            .overlay(shape.strokeBorder(Theme.glassBorder, lineWidth: 0.5))
             .clipShape(shape)
-            .shadow(color: Theme.deep.opacity(0.13), radius: 22, x: 0, y: 12)
+            .shadow(color: shadow ? Theme.shadow : .clear, radius: 16, x: 0, y: 10)
     }
 }
 
 extension View {
-    func glass(radius: CGFloat = 26, tint: Double = 0.42) -> some View {
-        modifier(GlassSurface(radius: radius, tint: tint))
+    func glassCard(radius: CGFloat = 24, shadow: Bool = true) -> some View {
+        modifier(GlassCard(radius: radius, shadow: shadow))
+    }
+}
+
+struct TopRoundedShape: Shape {
+    var radius: CGFloat = 38
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+        path.addQuadCurve(to: CGPoint(x: rect.minX + radius, y: rect.minY),
+                          control: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + radius),
+                          control: CGPoint(x: rect.maxX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }

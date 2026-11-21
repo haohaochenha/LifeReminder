@@ -16,7 +16,6 @@ struct LifeReminderApp: App {
             RootView()
                 .environmentObject(store)
                 .environmentObject(settings)
-                .preferredColorScheme(.light)
         }
     }
 }

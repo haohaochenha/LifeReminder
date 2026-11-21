@@ -10,11 +10,18 @@ struct CaptureView: View {
     @State private var isTranscribing = false
     @State private var isParsing = false
     @State private var lastSource: IdeaSource = .text
+    @State private var sessionIdeaId: UUID?
     @State private var alertMessage = ""
     @State private var showAlert = false
-    @State private var toast: String?
 
     let openSettings: () -> Void
+    let toast: (String, Bool) -> Void
+
+    init(openSettings: @escaping () -> Void,
+         toast: @escaping (String, Bool) -> Void) {
+        self.openSettings = openSettings
+        self.toast = toast
+    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -22,29 +29,20 @@ struct CaptureView: View {
                 header
                 composer
                 actionRow
+
                 if !settings.hasDeepSeek {
                     keyHint
                 }
+
                 if !drafts.isEmpty {
-                    draftsSection
+                    draftSection
                 }
-                historySection
+
+                recentIdeas
             }
-            .padding(.top, 10)
-            .padding(.bottom, 30)
-        }
-        .overlay(alignment: .top) {
-            if let toast = toast {
-                Text(toast)
-                    .font(Theme.rounded(13, .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Theme.deep.opacity(0.92)))
-                    .shadow(color: Theme.deep.opacity(0.25), radius: 12, y: 6)
-                    .padding(.top, 6)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
+            .padding(.horizontal, 20)
+            .padding(.top, 54)
+            .padding(.bottom, 120)
         }
         .onAppear {
             recorder.requestPermission { _ in }
@@ -59,16 +57,15 @@ struct CaptureView: View {
         }
     }
 
-    // MARK: - Header
-
     private var header: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text("记录想法")
-                .font(Theme.rounded(30, .bold))
-                .foregroundColor(Theme.ink)
+                .font(Theme.font(34, .bold))
+                .foregroundColor(Theme.label)
+                .tracking(-0.5)
             Text("说一句或写一句，AI 帮你变成带时间的提醒")
-                .font(Theme.rounded(13, .medium))
-                .foregroundColor(Theme.subInk)
+                .font(Theme.font(15))
+                .foregroundColor(Theme.label2)
         }
     }
 
@@ -79,100 +76,99 @@ struct CaptureView: View {
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "quote.bubble.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Theme.teal)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.orange)
                     Text("现在想到的是")
-                        .font(Theme.rounded(12, .semibold))
-                        .foregroundColor(Theme.subInk)
+                        .font(Theme.font(13, .semibold))
+                        .foregroundColor(Theme.label2)
                 }
                 Spacer()
                 Text("\(trimmedText.count) 字")
-                    .font(Theme.rounded(11, .medium))
-                    .foregroundColor(Theme.faint)
+                    .font(Theme.font(12))
+                    .foregroundColor(Theme.label3)
             }
 
             ZStack(alignment: .topLeading) {
                 if text.isEmpty {
                     Text("比如：明天下午三点提醒我去交体检报告，顺便买点水果")
-                        .font(Theme.rounded(15, .regular))
-                        .foregroundColor(Theme.faint)
+                        .font(Theme.font(16))
+                        .foregroundColor(Theme.label3)
                         .lineSpacing(4)
                         .padding(.top, 8)
                         .padding(.leading, 4)
                         .allowsHitTesting(false)
                 }
                 TextEditor(text: $text)
-                    .font(Theme.rounded(16, .regular))
-                    .foregroundColor(Theme.ink)
-                    .accentColor(Theme.teal)
-                    .frame(minHeight: 120, maxHeight: 170)
+                    .font(Theme.font(16))
+                    .foregroundColor(Theme.label)
+                    .accentColor(Theme.blue)
+                    .frame(minHeight: 112, maxHeight: 160)
                     .padding(.horizontal, -4)
             }
 
-            Rectangle()
-                .fill(Theme.deep.opacity(0.07))
-                .frame(height: 1)
+            WaveformView(isRecording: recorder.isRecording)
+                .frame(height: 44)
 
             HStack(spacing: 12) {
-                if recorder.isRecording {
-                    WaveformBars(level: recorder.level, color: Theme.teal)
-                        .frame(width: 76)
-                    Text(Fmt.clock(recorder.duration))
-                        .font(Theme.mono(14))
-                        .foregroundColor(Theme.deep)
-                    Text("松手结束")
-                        .font(Theme.rounded(12, .medium))
-                        .foregroundColor(Theme.subInk)
-                } else if isTranscribing {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: Theme.teal))
-                        .scaleEffect(0.8)
-                    Text("正在转成文字…")
-                        .font(Theme.rounded(12, .medium))
-                        .foregroundColor(Theme.subInk)
-                } else {
-                    Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Theme.faint)
-                    Text(settings.hasAliyun ? "按住麦克风说话" : "语音识别未配置，可先用文字")
-                        .font(Theme.rounded(12, .medium))
-                        .foregroundColor(Theme.subInk)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(recordTitle)
+                        .font(Theme.font(13, .semibold))
+                        .foregroundColor(recorder.isRecording ? Theme.red : Theme.label2)
+                    Text(recordSubtitle)
+                        .font(Theme.font(12))
+                        .foregroundColor(Theme.label3)
+                        .lineLimit(2)
                 }
-
                 Spacer(minLength: 4)
-                micButton
+                recordButton
             }
         }
         .padding(18)
-        .glass(radius: 28, tint: 0.46)
+        .glassCard(radius: 26)
     }
 
-    private var micButton: some View {
+    private var recordTitle: String {
+        if recorder.isRecording { return "正在录音 · \(Fmt.clock(recorder.duration))" }
+        if isTranscribing { return "正在上传并转写…" }
+        return "按住说话"
+    }
+
+    private var recordSubtitle: String {
+        if recorder.isRecording { return "松开结束，自动转成文字" }
+        if isTranscribing { return "音频会被上传到阿里云百炼完成转写" }
+        if !settings.hasDashScope { return "先在设置里填写百炼 API Key" }
+        return "松开结束，自动转成文字"
+    }
+
+    private var recordButton: some View {
         ZStack {
             if recorder.isRecording {
                 Circle()
-                    .stroke(Theme.teal.opacity(0.28), lineWidth: 7)
-                    .frame(width: 82, height: 82)
+                    .stroke(Theme.red.opacity(0.22), lineWidth: 6)
+                    .frame(width: 96, height: 96)
             }
             Circle()
-                .fill(recorder.isRecording ? AnyShapeStyle(Theme.warm) : AnyShapeStyle(Theme.brand))
-                .frame(width: 64, height: 64)
-                .shadow(color: Theme.teal.opacity(0.32), radius: 14, x: 0, y: 8)
+                .fill(Theme.fill)
+                .frame(width: 76, height: 76)
+            Circle()
+                .strokeBorder(Theme.fill2, lineWidth: 2)
+                .frame(width: 76, height: 76)
 
             if isTranscribing {
                 ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .progressViewStyle(CircularProgressViewStyle(tint: Theme.red))
             } else {
-                Image(systemName: recorder.isRecording ? "waveform" : "mic.fill")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white)
+                RoundedRectangle(cornerRadius: recorder.isRecording ? 7 : 12, style: .continuous)
+                    .fill(Theme.red)
+                    .frame(width: recorder.isRecording ? 24 : 26,
+                           height: recorder.isRecording ? 24 : 26)
             }
         }
-        .frame(width: 82, height: 82)
-        .scaleEffect(recorder.isRecording ? 1.05 : 1)
-        .animation(.easeInOut(duration: 0.18), value: recorder.isRecording)
+        .frame(width: 96, height: 96)
+        .scaleEffect(recorder.isRecording ? 1.04 : 1)
+        .animation(.easeInOut(duration: 0.2), value: recorder.isRecording)
         .contentShape(Circle())
-        .gesture(
+        .highPriorityGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in beginRecording() }
                 .onEnded { _ in endRecording() }
@@ -183,7 +179,7 @@ struct CaptureView: View {
 
     private var actionRow: some View {
         HStack(spacing: 10) {
-            GhostButton(title: "存为想法", icon: "bookmark") {
+            SecondaryButton(title: "存为想法", icon: "bookmark") {
                 saveAsIdea()
             }
             PrimaryButton(title: "AI 生成任务",
@@ -200,88 +196,125 @@ struct CaptureView: View {
             Haptics.tap()
             openSettings()
         }) {
-            HStack(spacing: 9) {
-                Image(systemName: "key.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Theme.amber)
+            HStack(spacing: 10) {
+                IconTile(color: Theme.orange, icon: "key.fill")
                 Text("还没填 DeepSeek Key，AI 解析暂时不可用")
-                    .font(Theme.rounded(12, .medium))
-                    .foregroundColor(Theme.subInk)
+                    .font(Theme.font(13))
+                    .foregroundColor(Theme.label2)
+                    .multilineTextAlignment(.leading)
                 Spacer(minLength: 4)
                 Text("去填写")
-                    .font(Theme.rounded(12, .bold))
-                    .foregroundColor(Theme.teal)
+                    .font(Theme.font(13, .semibold))
+                    .foregroundColor(Theme.blue)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.5)))
+            .padding(14)
+            .glassCard(radius: 18)
         }
         .buttonStyle(PressableStyle())
     }
 
     // MARK: - Drafts
 
-    private var draftsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("AI 拆成了 \(drafts.count) 个提醒")
-                    .font(Theme.rounded(15, .bold))
-                    .foregroundColor(Theme.ink)
-                Spacer()
-                Button(action: {
-                    Haptics.tap()
-                    parseText()
-                }) {
-                    Text("重新生成")
-                        .font(Theme.rounded(12, .semibold))
-                        .foregroundColor(Theme.teal)
-                }
-            }
+    private var draftSection: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            SectionTitle(title: "AI 解析结果", trailing: "\(drafts.count) 个")
 
-            ForEach($drafts) { $draft in
-                DraftCard(draft: $draft) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        drafts.removeAll { $0.id == draft.id }
+            GroupCard {
+                ForEach(Array(drafts.enumerated()), id: \.element.id) { index, draft in
+                    VStack(spacing: 0) {
+                        HStack(spacing: 12) {
+                            IconTile(color: draft.priority.color, icon: "sparkles")
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(draft.title)
+                                    .font(Theme.font(16, .medium))
+                                    .foregroundColor(Theme.label)
+                                    .lineLimit(2)
+                                Text(draftMeta(draft))
+                                    .font(Theme.font(13))
+                                    .foregroundColor(Theme.label2)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 6)
+                            MiniPillButton(title: "加入") {
+                                addDraft(draft)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+
+                        if index < drafts.count - 1 {
+                            CellDivider(inset: 58)
+                        }
                     }
                 }
             }
-
-            PrimaryButton(title: "全部加入提醒", icon: "checkmark.circle.fill") {
-                addAllDrafts()
-            }
-            .padding(.top, 4)
         }
-        .padding(.top, 4)
     }
 
-    // MARK: - History
+    private func draftMeta(_ draft: AIDraft) -> String {
+        let time = draft.dueDate.map { Fmt.due($0) } ?? "不定时"
+        return "\(time) · \(draft.priority.label)"
+    }
 
-    private var historySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "最近的想法",
-                          subtitle: "空的就记录一句，久了会看见自己的节奏",
-                          trailing: store.ideas.isEmpty ? nil : "\(store.ideas.count) 条")
+    // MARK: - Recent ideas
+
+    private var recentIdeas: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            SectionTitle(title: "最近的想法",
+                         trailing: store.ideas.isEmpty ? nil : "\(store.ideas.count) 条")
 
             if store.ideas.isEmpty {
-                Text("还没有记录")
-                    .font(Theme.rounded(12, .medium))
-                    .foregroundColor(Theme.faint)
-                    .padding(.leading, 4)
+                GroupCard {
+                    EmptyStateView(icon: "text.alignleft", message: "记录过的话会出现在这里")
+                }
             } else {
-                ForEach(Array(store.latestIdeas.prefix(5))) { idea in
-                    IdeaRow(idea: idea)
-                        .onTapGesture {
-                            Haptics.soft()
-                            text = idea.text
+                GroupCard {
+                    ForEach(Array(store.latestIdeas.prefix(6).enumerated()), id: \.element.id) { index, idea in
+                        VStack(spacing: 0) {
+                            HStack(alignment: .top, spacing: 12) {
+                                IconTile(color: idea.source == .voice ? Theme.indigo : Theme.blue,
+                                         icon: idea.source == .voice ? "waveform" : "text.alignleft",
+                                         size: 30, circle: true)
+
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(idea.text)
+                                        .font(Theme.font(15))
+                                        .foregroundColor(Theme.label)
+                                        .lineLimit(2)
+                                    HStack(spacing: 8) {
+                                        Text(Fmt.full(idea.createdAt))
+                                            .font(Theme.font(12))
+                                            .foregroundColor(Theme.label3)
+                                        if idea.converted > 0 {
+                                            Text("已生成 \(idea.converted) 个提醒")
+                                                .font(Theme.font(12, .medium))
+                                                .foregroundColor(Theme.blue)
+                                        }
+                                    }
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                Haptics.soft()
+                                text = idea.text
+                                lastSource = idea.source
+                                toast("已填入输入框", true)
+                            }
+
+                            if index < min(5, store.ideas.count - 1) {
+                                CellDivider(inset: 58)
+                            }
                         }
+                    }
                 }
             }
         }
-        .padding(.top, 6)
     }
 
-    // MARK: - Recording flow
+    // MARK: - Recording
 
     private var trimmedText: String {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -289,8 +322,8 @@ struct CaptureView: View {
 
     private func beginRecording() {
         guard !recorder.isRecording, !isTranscribing else { return }
-        guard settings.hasAliyun else {
-            presentError(ASRError.missingConfig)
+        guard settings.hasDashScope else {
+            presentError(ASRError.missingKey)
             return
         }
         if recorder.start() {
@@ -315,34 +348,21 @@ struct CaptureView: View {
 
     private func transcribe(_ url: URL) {
         isTranscribing = true
-        let appKey = settings.trimmedAppKey
-        var token = settings.trimmedToken
-        let expire = settings.aliyunTokenExpire
-        let akId = settings.aliyunAccessKeyId
-        let akSecret = settings.aliyunAccessKeySecret
-        let canAutoRefresh = settings.hasAliyunAuto
+        let apiKey = settings.trimmedDashScopeKey
+        let model = settings.resolvedASRModel
+        let workspace = settings.resolvedWorkspace
 
         Task {
             do {
-                let data = try Data(contentsOf: url)
-                let pcm = AliyunASRService.rawPCM(fromWav: data)
-
-                if token.isEmpty || (canAutoRefresh && expire < Date().timeIntervalSince1970) {
-                    let result = try await AliyunASRService.createToken(accessKeyId: akId,
-                                                                       accessKeySecret: akSecret)
-                    token = result.token
-                    await MainActor.run {
-                        settings.aliyunToken = result.token
-                        settings.aliyunTokenExpire = result.expire.timeIntervalSince1970
-                    }
-                }
-
-                let recognized = try await AliyunASRService.recognize(pcm: pcm, appKey: appKey, token: token)
+                let result = try await DashScopeASRService.transcribe(fileURL: url,
+                                                                      apiKey: apiKey,
+                                                                      model: model,
+                                                                      workspaceId: workspace)
                 await MainActor.run {
                     if self.text.isEmpty {
-                        self.text = recognized
+                        self.text = result
                     } else {
-                        self.text += " " + recognized
+                        self.text += " " + result
                     }
                     self.lastSource = .voice
                     self.isTranscribing = false
@@ -358,7 +378,7 @@ struct CaptureView: View {
         }
     }
 
-    // MARK: - AI flow
+    // MARK: - AI
 
     private func parseText() {
         let content = trimmedText
@@ -378,6 +398,7 @@ struct CaptureView: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                         self.drafts = result
                     }
+                    self.sessionIdeaId = nil
                     self.isParsing = false
                     Haptics.success()
                 }
@@ -390,21 +411,25 @@ struct CaptureView: View {
         }
     }
 
-    private func addAllDrafts() {
-        let valid = drafts.filter { !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-        guard !valid.isEmpty else { return }
-        let tasks = valid.map { $0.makeTask(defaultLead: settings.defaultLeadMinutes) }
-        store.add(tasks)
-        store.addIdea(IdeaNote(text: trimmedText.isEmpty ? "AI 生成的提醒" : trimmedText,
-                               source: lastSource,
-                               converted: tasks.count))
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
-            drafts = []
-            text = ""
-            lastSource = .text
+    private func addDraft(_ draft: AIDraft) {
+        let task = draft.makeTask(defaultLead: settings.defaultLeadMinutes)
+        store.add(task)
+
+        if sessionIdeaId == nil {
+            let idea = IdeaNote(text: trimmedText.isEmpty ? "AI 生成的提醒" : trimmedText,
+                                source: lastSource,
+                                converted: 1)
+            store.addIdea(idea)
+            sessionIdeaId = idea.id
+        } else if let id = sessionIdeaId {
+            store.markIdeaConverted(id, count: 1)
+        }
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            drafts.removeAll { $0.id == draft.id }
         }
         Haptics.success()
-        showToast("已加入 \(tasks.count) 个提醒")
+        toast("已加入提醒", true)
     }
 
     private func saveAsIdea() {
@@ -413,9 +438,10 @@ struct CaptureView: View {
         withAnimation {
             text = ""
             lastSource = .text
+            sessionIdeaId = nil
         }
         Haptics.success()
-        showToast("已存为想法")
+        toast("已存为想法", true)
     }
 
     // MARK: - Feedback
@@ -429,156 +455,5 @@ struct CaptureView: View {
     private func showMessage(_ message: String) {
         alertMessage = message
         showAlert = true
-    }
-
-    private func showToast(_ message: String) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            toast = message
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.9) {
-            withAnimation(.easeOut(duration: 0.25)) {
-                toast = nil
-            }
-        }
-    }
-}
-
-// MARK: - Draft Card
-
-private struct DraftCard: View {
-    @Binding var draft: AIDraft
-    var onRemove: () -> Void
-
-    @State private var hasTime: Bool
-
-    init(draft: Binding<AIDraft>, onRemove: @escaping () -> Void) {
-        self._draft = draft
-        self.onRemove = onRemove
-        self._hasTime = State(initialValue: draft.wrappedValue.dueDate != nil)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 8) {
-                TextField("任务名称", text: $draft.title)
-                    .font(Theme.rounded(16, .semibold))
-                    .foregroundColor(Theme.ink)
-                Button(action: onRemove) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(Theme.faint.opacity(0.7))
-                }
-                .buttonStyle(PressableStyle())
-            }
-
-            if !draft.note.isEmpty {
-                TextField("备注", text: $draft.note)
-                    .font(Theme.rounded(13, .regular))
-                    .foregroundColor(Theme.subInk)
-            }
-
-            HStack(spacing: 8) {
-                Button(action: {
-                    Haptics.soft()
-                    hasTime.toggle()
-                    if hasTime {
-                        if draft.dueDate == nil {
-                            draft.dueDate = Date().addingTimeInterval(3600)
-                        }
-                    } else {
-                        draft.dueDate = nil
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: hasTime ? "clock.fill" : "clock")
-                            .font(.system(size: 10, weight: .bold))
-                        Text(hasTime ? "定时" : "不定时")
-                            .font(Theme.rounded(11, .semibold))
-                    }
-                    .foregroundColor(hasTime ? .white : Theme.subInk)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule().fill(hasTime ? AnyShapeStyle(Theme.brandBar) : AnyShapeStyle(Color.white.opacity(0.7)))
-                    )
-                }
-                .buttonStyle(PressableStyle())
-
-                if hasTime {
-                    DatePicker("",
-                               selection: Binding(get: { draft.dueDate ?? Date() },
-                                                  set: { draft.dueDate = $0 }),
-                               displayedComponents: [.date, .hourAndMinute])
-                        .labelsHidden()
-                        .datePickerStyle(.compact)
-                }
-
-                Spacer(minLength: 4)
-            }
-
-            HStack(spacing: 6) {
-                ForEach(TaskPriority.allCases) { priority in
-                    Button(action: {
-                        Haptics.soft()
-                        draft.priority = priority
-                    }) {
-                        Text(priority.label)
-                            .font(Theme.rounded(11, .semibold))
-                            .foregroundColor(draft.priority == priority ? .white : priority.color)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(
-                                Capsule().fill(draft.priority == priority
-                                    ? AnyShapeStyle(priority.color)
-                                    : AnyShapeStyle(priority.color.opacity(0.12)))
-                            )
-                    }
-                    .buttonStyle(PressableStyle())
-                }
-                Spacer()
-            }
-        }
-        .padding(14)
-        .glass(radius: 20, tint: 0.44)
-    }
-}
-
-// MARK: - Idea Row
-
-private struct IdeaRow: View {
-    let idea: IdeaNote
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill((idea.source == .voice ? Theme.sky : Theme.teal).opacity(0.12))
-                    .frame(width: 30, height: 30)
-                Image(systemName: idea.source.icon)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(idea.source == .voice ? Theme.sky : Theme.teal)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(idea.text)
-                    .font(Theme.rounded(13, .medium))
-                    .foregroundColor(Theme.ink)
-                    .lineLimit(2)
-                HStack(spacing: 8) {
-                    Text(Fmt.full(idea.createdAt))
-                        .font(Theme.rounded(11, .medium))
-                        .foregroundColor(Theme.faint)
-                    if idea.converted > 0 {
-                        Text("已生成 \(idea.converted) 个提醒")
-                            .font(Theme.rounded(11, .semibold))
-                            .foregroundColor(Theme.teal)
-                    }
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(12)
-        .glass(radius: 16, tint: 0.3)
     }
 }

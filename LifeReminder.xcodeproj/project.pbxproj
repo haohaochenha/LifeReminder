@@ -15,7 +15,7 @@
 		9F8E7D6C5B4A39281706C046 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B026 /* SettingsStore.swift */; };
 		9F8E7D6C5B4A39281706C047 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B027 /* NotificationManager.swift */; };
 		9F8E7D6C5B4A39281706C048 /* DeepSeekService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B028 /* DeepSeekService.swift */; };
-		9F8E7D6C5B4A39281706C049 /* AliyunASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B029 /* AliyunASRService.swift */; };
+		9F8E7D6C5B4A39281706C049 /* DashScopeASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B029 /* DashScopeASRService.swift */; };
 		9F8E7D6C5B4A39281706C04A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02A /* AudioRecorder.swift */; };
 		9F8E7D6C5B4A39281706C04B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02B /* RootView.swift */; };
 		9F8E7D6C5B4A39281706C04C /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02C /* TodayView.swift */; };
@@ -36,7 +36,7 @@
 		9F8E7D6C5B4A39281706B026 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		9F8E7D6C5B4A39281706B027 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		9F8E7D6C5B4A39281706B028 /* DeepSeekService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepSeekService.swift; sourceTree = "<group>"; };
-		9F8E7D6C5B4A39281706B029 /* AliyunASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AliyunASRService.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B029 /* DashScopeASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashScopeASRService.swift; sourceTree = "<group>"; };
 		9F8E7D6C5B4A39281706B02A /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		9F8E7D6C5B4A39281706B02B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		9F8E7D6C5B4A39281706B02C /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
@@ -111,7 +111,7 @@
 			children = (
 				9F8E7D6C5B4A39281706B027 /* NotificationManager.swift */,
 				9F8E7D6C5B4A39281706B028 /* DeepSeekService.swift */,
-				9F8E7D6C5B4A39281706B029 /* AliyunASRService.swift */,
+				9F8E7D6C5B4A39281706B029 /* DashScopeASRService.swift */,
 				9F8E7D6C5B4A39281706B02A /* AudioRecorder.swift */,
 			);
 			path = Services;
@@ -207,7 +207,7 @@
 				9F8E7D6C5B4A39281706C046 /* SettingsStore.swift in Sources */,
 				9F8E7D6C5B4A39281706C047 /* NotificationManager.swift in Sources */,
 				9F8E7D6C5B4A39281706C048 /* DeepSeekService.swift in Sources */,
-				9F8E7D6C5B4A39281706C049 /* AliyunASRService.swift in Sources */,
+				9F8E7D6C5B4A39281706C049 /* DashScopeASRService.swift in Sources */,
 				9F8E7D6C5B4A39281706C04A /* AudioRecorder.swift in Sources */,
 				9F8E7D6C5B4A39281706C04B /* RootView.swift in Sources */,
 				9F8E7D6C5B4A39281706C04C /* TodayView.swift in Sources */,
@@ -293,7 +293,6 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.haohaochenha.lifereminder;
@@ -321,7 +320,6 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.haohaochenha.lifereminder;
