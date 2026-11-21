@@ -118,7 +118,18 @@ final class AppStore: ObservableObject {
         persist()
     }
 
+    func updateAnniversary(_ item: Anniversary) {
+        guard let index = anniversaries.firstIndex(where: { $0.id == item.id }) else { return }
+        let oldImage = anniversaries[index].imageFile
+        anniversaries[index] = item
+        if oldImage != item.imageFile {
+            AnniversaryImageStore.delete(oldImage)
+        }
+        persist()
+    }
+
     func deleteAnniversary(_ item: Anniversary) {
+        AnniversaryImageStore.delete(item.imageFile)
         anniversaries.removeAll { $0.id == item.id }
         persist()
     }
@@ -131,6 +142,7 @@ final class AppStore: ObservableObject {
     }
 
     func resetEverything() {
+        anniversaries.forEach { AnniversaryImageStore.delete($0.imageFile) }
         tasks = []
         ideas = []
         anniversaries = []
@@ -140,7 +152,7 @@ final class AppStore: ObservableObject {
     // MARK: - Notifications
 
     func syncNotifications(enabled: Bool) {
-        NotificationManager.shared.sync(tasks: tasks, enabled: enabled)
+        NotificationManager.shared.sync(tasks: tasks, anniversaries: anniversaries, enabled: enabled)
     }
 
     // MARK: - Persistence
@@ -192,7 +204,7 @@ final class AppStore: ObservableObject {
         let spring = calendar.date(from: DateComponents(year: 2027, month: 2, day: 6)) ?? now
         anniversaries = [
             Anniversary(title: "开始记录生活", date: start),
-            Anniversary(title: "下一个春节", date: spring)
+            Anniversary(title: "下一个春节", date: spring, repeatMode: .yearly)
         ]
 
         persist()

@@ -6,6 +6,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
     private let center = UNUserNotificationCenter.current()
     private let prefix = "life.task."
+    private let anniversaryPrefix = "life.anniv."
 
     private override init() {
         super.init()
@@ -35,11 +36,12 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
-    /// 重新同步所有待触发提醒：先清掉旧的，再按当前任务重新排期。
-    func sync(tasks: [TaskItem], enabled: Bool) {
+    /// 重新同步所有待触发提醒：先清掉旧的，再按当前任务和纪念日重新排期。
+    func sync(tasks: [TaskItem], anniversaries: [Anniversary], enabled: Bool) {
         center.getPendingNotificationRequests { [weak self] pending in
             guard let self = self else { return }
-            let ids = pending.map { $0.identifier }.filter { $0.hasPrefix(self.prefix) }
+            let ids = pending.map { $0.identifier }
+                .filter { $0.hasPrefix(self.prefix) || $0.hasPrefix(self.anniversaryPrefix) }
             if !ids.isEmpty {
                 self.center.removePendingNotificationRequests(withIdentifiers: ids)
             }
@@ -66,6 +68,28 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
                 components.second = 0
                 let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
                 let request = UNNotificationRequest(identifier: self.prefix + task.notificationID,
+                                                    content: content,
+                                                    trigger: trigger)
+                self.center.add(request)
+            }
+
+            // 纪念日：按「每年 / 每月 / 每周」的下一次日期，当天早上 9 点提醒
+            for item in anniversaries where item.remind && item.isRepeating {
+                guard let next = item.nextDate else { continue }
+                var components = calendar.dateComponents([.year, .month, .day], from: next)
+                components.hour = 9
+                components.minute = 0
+                components.second = 0
+                guard let fireDate = calendar.date(from: components), fireDate > now else { continue }
+
+                let content = UNMutableNotificationContent()
+                content.title = "纪念日提醒 · \(item.title)"
+                content.body = item.notificationBody
+                content.sound = .default
+                content.userInfo = ["anniversaryID": item.id.uuidString]
+
+                let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+                let request = UNNotificationRequest(identifier: self.anniversaryPrefix + item.id.uuidString,
                                                     content: content,
                                                     trigger: trigger)
                 self.center.add(request)

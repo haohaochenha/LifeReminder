@@ -5,12 +5,14 @@ private enum SheetRoute: Identifiable {
     case newTask
     case editTask(TaskItem)
     case newAnniversary
+    case editAnniversary(Anniversary)
 
     var id: String {
         switch self {
         case .newTask: return "new-task"
         case .editTask(let task): return "edit-\(task.id.uuidString)"
         case .newAnniversary: return "new-anniversary"
+        case .editAnniversary(let item): return "edit-anniversary-\(item.id.uuidString)"
         }
     }
 }
@@ -49,6 +51,9 @@ struct RootView: View {
         .onChange(of: store.tasks) { _ in
             store.syncNotifications(enabled: settings.notifyEnabled)
         }
+        .onChange(of: store.anniversaries) { _ in
+            store.syncNotifications(enabled: settings.notifyEnabled)
+        }
         .onChange(of: settings.notifyEnabled) { enabled in
             store.syncNotifications(enabled: enabled)
             if enabled {
@@ -81,6 +86,7 @@ struct RootView: View {
                       addTask: { sheet = .newTask },
                       editTask: { sheet = .editTask($0) },
                       addAnniversary: { sheet = .newAnniversary },
+                      editAnniversary: { sheet = .editAnniversary($0) },
                       toast: showToast)
         case .tasks:
             TasksView(filterIndex: $taskFilter,
@@ -213,10 +219,18 @@ struct RootView: View {
                            },
                            onClose: closeSheet)
         case .newAnniversary:
-            AnniversarySheet { item in
+            AnniversarySheet(item: nil) { item in
                 store.addAnniversary(item)
                 closeSheet()
                 showToast("纪念日已添加")
+            } onClose: {
+                closeSheet()
+            }
+        case .editAnniversary(let item):
+            AnniversarySheet(item: item) { updated in
+                store.updateAnniversary(updated)
+                closeSheet()
+                showToast("纪念日已保存")
             } onClose: {
                 closeSheet()
             }

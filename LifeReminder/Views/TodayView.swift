@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct TodayView: View {
     @EnvironmentObject private var store: AppStore
@@ -8,6 +9,7 @@ struct TodayView: View {
     let addTask: () -> Void
     let editTask: (TaskItem) -> Void
     let addAnniversary: () -> Void
+    let editAnniversary: (Anniversary) -> Void
     let toast: (String, Bool) -> Void
 
     private let accents: [Color] = [Theme.blue, Theme.indigo, Theme.orange, Theme.green, Theme.pink]
@@ -241,6 +243,10 @@ struct TodayView: View {
                                             store.deleteAnniversary(item)
                                         }
                                         toast("已删除纪念日", true)
+                                    },
+                                    onEdit: {
+                                        Haptics.tap()
+                                        editAnniversary(item)
                                     })
                 }
 
@@ -333,8 +339,10 @@ private struct AnniversaryCard: View {
     let item: Anniversary
     let accent: Color
     let onDelete: () -> Void
+    let onEdit: () -> Void
 
     @State private var flipped = false
+    @State private var cover: UIImage?
 
     var body: some View {
         ZStack {
@@ -347,11 +355,7 @@ private struct AnniversaryCard: View {
                 .rotation3DEffect(.degrees(flipped ? 0 : -90), axis: (x: 0, y: 1, z: 0))
         }
         .frame(width: 176, height: 184)
-        .background(
-            LinearGradient(colors: [accent.opacity(0.20), accent.opacity(0.03)],
-                           startPoint: .topTrailing,
-                           endPoint: .bottomLeading)
-        )
+        .background(cardBackground)
         .glassCard(radius: 26)
         .onTapGesture {
             Haptics.soft()
@@ -359,11 +363,52 @@ private struct AnniversaryCard: View {
                 flipped.toggle()
             }
         }
+        .onAppear { cover = AnniversaryImageStore.load(item.imageFile) }
+        .onChange(of: item.imageFile) { _ in
+            cover = AnniversaryImageStore.load(item.imageFile)
+        }
+    }
+
+    private var cardBackground: some View {
+        ZStack {
+            if let cover = cover {
+                Image(uiImage: cover)
+                    .resizable()
+                    .scaledToFill()
+                // 让照片上方的文字始终可读
+                Theme.card.opacity(0.62)
+            }
+            LinearGradient(colors: [accent.opacity(0.20), accent.opacity(0.03)],
+                           startPoint: .topTrailing,
+                           endPoint: .bottomLeading)
+        }
     }
 
     private var front: some View {
         VStack(alignment: .leading, spacing: 6) {
-            IconTile(color: accent, icon: "flag.fill", size: 30, circle: true)
+            HStack(spacing: 6) {
+                if let cover = cover {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 32, height: 32)
+                        .clipShape(Circle())
+                        .overlay(Circle().strokeBorder(Color.white.opacity(0.65), lineWidth: 1))
+                } else {
+                    IconTile(color: accent, icon: "flag.fill", size: 30, circle: true)
+                }
+
+                Spacer(minLength: 0)
+
+                if item.isRepeating {
+                    Text(item.repeatMode.label)
+                        .font(Theme.font(10, .semibold))
+                        .foregroundColor(accent)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(accent.opacity(0.14)))
+                }
+            }
 
             Text(item.title)
                 .font(Theme.font(15, .semibold))
@@ -371,12 +416,12 @@ private struct AnniversaryCard: View {
                 .lineLimit(1)
                 .padding(.top, 2)
 
-            Text(item.label)
+            Text(item.displayLabel)
                 .font(Theme.font(12))
                 .foregroundColor(Theme.label2)
 
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text("\(item.dayCount)")
+                Text("\(item.displayCount)")
                     .font(Theme.num(42))
                     .foregroundColor(Theme.label)
                 Text("天")
@@ -384,10 +429,11 @@ private struct AnniversaryCard: View {
                     .foregroundColor(Theme.label2)
             }
 
-            Text(item.caption)
+            Text(item.displayCaption)
                 .font(Theme.font(12))
                 .foregroundColor(Theme.label2)
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
 
             Spacer(minLength: 4)
 
@@ -395,7 +441,7 @@ private struct AnniversaryCard: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Theme.fill)
                     Capsule().fill(accent)
-                        .frame(width: max(4, geo.size.width * CGFloat(item.progress)))
+                        .frame(width: max(4, geo.size.width * CGFloat(item.displayProgress)))
                 }
             }
             .frame(height: 4)
@@ -406,15 +452,26 @@ private struct AnniversaryCard: View {
 
     private var back: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(item.title)
-                .font(Theme.font(16, .bold))
-                .foregroundColor(Theme.label)
-                .lineLimit(1)
+            HStack(spacing: 6) {
+                Text(item.title)
+                    .font(Theme.font(16, .bold))
+                    .foregroundColor(Theme.label)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Theme.blue)
+                        .frame(width: 28, height: 28)
+                        .background(Circle().fill(Theme.blue.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+            }
 
             VStack(alignment: .leading, spacing: 6) {
                 detailRow("开始", Fmt.yearDate(item.date))
-                detailRow("折合", item.weekText)
-                detailRow("今天", Fmt.yearDate(Date()))
+                detailRow("方式", item.repeatMode.label)
+                detailRow("下次", item.nextText)
             }
 
             Spacer(minLength: 0)

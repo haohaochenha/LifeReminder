@@ -1,4 +1,6 @@
 import SwiftUI
+import UIKit
+import PhotosUI
 
 struct TaskEditorView: View {
     @State private var draft: TaskItem
@@ -177,14 +179,31 @@ struct TaskEditorView: View {
 }
 
 struct AnniversarySheet: View {
-    @State private var title = ""
-    @State private var date = Date()
+    private let existing: Anniversary?
+
+    @State private var title: String
+    @State private var date: Date
+    @State private var repeatMode: AnniversaryRepeat
+    @State private var remind: Bool
+    @State private var pickedImage: UIImage?
+    @State private var existingImage: UIImage?
+    @State private var removeImage = false
+    @State private var showPicker = false
+    @State private var manualRepeat: Bool
 
     let onSave: (Anniversary) -> Void
     let onClose: () -> Void
 
-    init(onSave: @escaping (Anniversary) -> Void,
+    init(item: Anniversary? = nil,
+         onSave: @escaping (Anniversary) -> Void,
          onClose: @escaping () -> Void) {
+        self.existing = item
+        _title = State(initialValue: item?.title ?? "")
+        _date = State(initialValue: item?.date ?? Date())
+        _repeatMode = State(initialValue: item?.repeatMode ?? .none)
+        _remind = State(initialValue: item?.remind ?? true)
+        _existingImage = State(initialValue: AnniversaryImageStore.load(item?.imageFile))
+        _manualRepeat = State(initialValue: (item?.repeatMode ?? .none) != .none)
         self.onSave = onSave
         self.onClose = onClose
     }
@@ -203,14 +222,14 @@ struct AnniversarySheet: View {
 
                 Spacer()
 
-                Text("新建纪念日")
+                Text(existing == nil ? "新建纪念日" : "编辑纪念日")
                     .font(Theme.font(17, .semibold))
                     .foregroundColor(Theme.label)
 
                 Spacer()
 
                 Button(action: save) {
-                    Text("添加")
+                    Text(existing == nil ? "添加" : "保存")
                         .font(Theme.font(17, .semibold))
                         .foregroundColor(canSave ? Theme.blue : Theme.label3)
                 }
@@ -220,37 +239,175 @@ struct AnniversarySheet: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 14)
 
-            VStack(alignment: .leading, spacing: 14) {
-                GroupCard(radius: 22, solid: true) {
-                    TextField("纪念日名称，比如「在一起」", text: $title)
-                        .font(Theme.font(19, .medium))
-                        .foregroundColor(Theme.label)
-                        .accentColor(Theme.blue)
-                        .padding(.horizontal, 16)
-                        .frame(minHeight: 58)
-
-                    CellDivider(inset: 16)
-
-                    HStack {
-                        Text("日期")
-                            .font(Theme.font(17))
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 14) {
+                    GroupCard(radius: 22, solid: true) {
+                        TextField("纪念日名称，比如「在一起」", text: $title)
+                            .font(Theme.font(19, .medium))
                             .foregroundColor(Theme.label)
-                        Spacer()
-                        DatePicker("", selection: $date, displayedComponents: [.date])
-                            .labelsHidden()
-                            .datePickerStyle(.compact)
                             .accentColor(Theme.blue)
-                    }
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: 54)
-                }
+                            .padding(.horizontal, 16)
+                            .frame(minHeight: 58)
 
-                GFCaption(text: "选过去的日期会显示已经坚持了多久，选未来的日期会显示倒计时。轻点卡片可以翻面查看和删除。")
-                    .padding(.leading, 6)
+                        CellDivider(inset: 16)
+
+                        photoRow
+
+                        CellDivider(inset: 16)
+
+                        HStack {
+                            Text("日期")
+                                .font(Theme.font(17))
+                                .foregroundColor(Theme.label)
+                            Spacer()
+                            DatePicker("", selection: $date, displayedComponents: [.date])
+                                .labelsHidden()
+                                .datePickerStyle(.compact)
+                                .accentColor(Theme.blue)
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: 54)
+
+                        CellDivider(inset: 16)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("重复")
+                                    .font(Theme.font(17))
+                                    .foregroundColor(Theme.label)
+                                Spacer()
+                                if repeatMode != .none {
+                                    Text("自动识别")
+                                        .font(Theme.font(11, .medium))
+                                        .foregroundColor(Theme.label3)
+                                }
+                            }
+                            SegmentedControl(items: AnniversaryRepeat.allCases.map { $0.label },
+                                             selection: repeatSelection)
+                        }
+                        .padding(16)
+
+                        if repeatMode != .none {
+                            CellDivider(inset: 16)
+
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("到时提醒")
+                                        .font(Theme.font(17))
+                                        .foregroundColor(Theme.label)
+                                    Text("当天早上 9:00 通知")
+                                        .font(Theme.font(12))
+                                        .foregroundColor(Theme.label2)
+                                }
+                                Spacer()
+                                Toggle("", isOn: $remind)
+                                    .labelsHidden()
+                                    .toggleStyle(SwitchToggleStyle(tint: Theme.blue))
+                            }
+                            .padding(.horizontal, 16)
+                            .frame(minHeight: 60)
+                        }
+                    }
+
+                    GFCaption(text: "会根据名称自动识别周年 / 每月 / 每周（比如「结婚纪念日」「房租」「周会」），识别后也可以手动修改。选过去的日期显示已经多久，选未来的日期显示倒计时。")
+                        .padding(.leading, 6)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 34)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 34)
         }
+        .sheet(isPresented: $showPicker) {
+            PhotoPicker { image in
+                pickedImage = image
+                removeImage = false
+                showPicker = false
+            }
+        }
+        .onChange(of: title) { value in
+            guard !manualRepeat else { return }
+            let detected = Anniversary.detectRepeat(for: value)
+            if detected != .none {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    repeatMode = detected
+                }
+            }
+        }
+    }
+
+    // MARK: - 封面图
+
+    private var currentImage: UIImage? {
+        if let pickedImage = pickedImage { return pickedImage }
+        return removeImage ? nil : existingImage
+    }
+
+    private var photoRow: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Theme.fill)
+                    .frame(width: 52, height: 52)
+
+                if let image = currentImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 52, height: 52)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                } else {
+                    Image(systemName: "photo")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(Theme.blue)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("封面图片")
+                    .font(Theme.font(17))
+                    .foregroundColor(Theme.label)
+                Text(currentImage == nil ? "选一张照片显示在卡片上" : "轻点更换封面")
+                    .font(Theme.font(12))
+                    .foregroundColor(Theme.label2)
+            }
+
+            Spacer(minLength: 0)
+
+            if currentImage != nil {
+                Button(action: {
+                    Haptics.tap()
+                    pickedImage = nil
+                    removeImage = true
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(Theme.label3)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Theme.label3)
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 68)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Haptics.tap()
+            showPicker = true
+        }
+    }
+
+    private var repeatSelection: Binding<Int> {
+        Binding(
+            get: {
+                AnniversaryRepeat.allCases.firstIndex(of: repeatMode) ?? 0
+            },
+            set: { index in
+                manualRepeat = true
+                repeatMode = AnniversaryRepeat.allCases[index]
+            }
+        )
     }
 
     private var canSave: Bool {
@@ -259,9 +416,62 @@ struct AnniversarySheet: View {
 
     private func save() {
         guard canSave else { return }
-        let item = Anniversary(title: title.trimmingCharacters(in: .whitespacesAndNewlines), date: date)
+        var item = existing ?? Anniversary(title: "", date: date)
+        item.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        item.date = date
+        item.repeatMode = repeatMode
+        item.remind = remind
+
+        if let image = pickedImage, let name = AnniversaryImageStore.save(image) {
+            item.imageFile = name
+        } else if removeImage {
+            item.imageFile = nil
+        }
+
         Haptics.success()
         onSave(item)
+    }
+}
+
+// MARK: - 系统相册选图（PHPicker，不申请相册权限）
+
+struct PhotoPicker: UIViewControllerRepresentable {
+    var onPick: (UIImage) -> Void
+
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        let controller = PHPickerViewController(configuration: config)
+        controller.delegate = context.coordinator
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPick: onPick)
+    }
+
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let onPick: (UIImage) -> Void
+
+        init(onPick: @escaping (UIImage) -> Void) {
+            self.onPick = onPick
+        }
+
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+            guard let provider = results.first?.itemProvider,
+                  provider.canLoadObject(ofClass: UIImage.self) else { return }
+
+            provider.loadObject(ofClass: UIImage.self) { object, _ in
+                guard let image = object as? UIImage else { return }
+                DispatchQueue.main.async {
+                    self.onPick(image)
+                }
+            }
+        }
     }
 }
 
