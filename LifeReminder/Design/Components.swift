@@ -486,45 +486,60 @@ struct GFCaption: View {
 
 // MARK: - 滚动联动（顶栏毛玻璃渐显 + tab bar 自动收起）
 
+/// tab bar 的收起状态单独抽一个对象，避免滚动时每帧带着它一起重绘。
+final class TabMiniState: ObservableObject {
+    @Published var mini = false
+}
+
 /// 对应 HTML 里的 lastY / --p 逻辑，独立成 ObservableObject，
 /// 让滚动时不触发 RootView 整体重绘。
 final class ScrollChrome: ObservableObject {
     static let spaceName = "life-scroll"
 
-    /// 当前滚动距离（内容顶部离开视口顶部的距离）
-    @Published private(set) var y: CGFloat = 0
-    /// tab bar 是否收起（矮、缩、隐藏文字）
-    @Published private(set) var mini: Bool = false
+    let miniState = TabMiniState()
 
+    /// 只在顶栏透明度真的变化时才发布，避免整段滚动每帧刷新。
+    @Published private(set) var y: CGFloat = 0
+
+    private var raw: CGFloat = 0
+    private var publishedOpacity: Double = 0
     private var lastY: CGFloat = 0
 
     /// 顶栏不透明度：clamp((y - 24) / 28)
     var topBarOpacity: Double {
-        Double(min(1, max(0, (y - 24) / 28)))
+        Double(min(1, max(0, (raw - 24) / 28)))
     }
 
     func update(_ value: CGFloat) {
-        guard abs(value - y) > 0.4 else { return }
-        y = value
+        guard abs(value - raw) > 0.4 else { return }
+        raw = value
 
         let delta = value - lastY
         if abs(delta) > 8 {
             let next = delta > 0 && value > 70
-            if next != mini {
+            if next != miniState.mini {
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.88)) {
-                    mini = next
+                    miniState.mini = next
                 }
             }
             lastY = value
         }
+
+        let opacity = topBarOpacity
+        if abs(opacity - publishedOpacity) > 0.01 {
+            publishedOpacity = opacity
+            y = value
+        }
     }
 
     func reset() {
-        y = 0
+        raw = 0
+        publishedOpacity = 0
         lastY = 0
-        if mini {
+        if y != 0 { y = 0 }
+        if miniState.mini {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.88)) {
-                mini = false
+                miniState.mini = false
             }
         }
     }

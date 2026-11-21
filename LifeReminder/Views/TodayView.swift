@@ -3,8 +3,6 @@ import SwiftUI
 struct TodayView: View {
     @EnvironmentObject private var store: AppStore
 
-    @State private var now = Date()
-
     let openCapture: () -> Void
     let openTasks: (Int) -> Void
     let addTask: () -> Void
@@ -12,7 +10,6 @@ struct TodayView: View {
     let addAnniversary: () -> Void
     let toast: (String, Bool) -> Void
 
-    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let accents: [Color] = [Theme.blue, Theme.indigo, Theme.orange, Theme.green, Theme.pink]
 
     init(openCapture: @escaping () -> Void,
@@ -50,18 +47,17 @@ struct TodayView: View {
             .padding(.bottom, 120)
         }
         .coordinateSpace(name: ScrollChrome.spaceName)
-        .onReceive(ticker) { now = $0 }
     }
 
     // MARK: - Header
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(Fmt.dateLine(now))
+            Text(Fmt.dateLine(Date()))
                 .font(Theme.font(13, .semibold))
                 .foregroundColor(Theme.label2)
                 .tracking(0.6)
-            Text(Fmt.greeting(now))
+            Text(Fmt.greeting(Date()))
                 .font(Theme.font(34, .bold))
                 .foregroundColor(Theme.label)
                 .tracking(-0.5)
@@ -79,8 +75,15 @@ struct TodayView: View {
 
     // MARK: - Hero
 
-    @ViewBuilder
     private var heroCard: some View {
+        // 只让这一张卡按秒刷新，页面其余部分不再每秒整体重绘
+        TimelineView(.periodic(from: Date(), by: 1)) { _ in
+            heroContent
+        }
+    }
+
+    @ViewBuilder
+    private var heroContent: some View {
         if let next = store.nextTask {
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 18) {

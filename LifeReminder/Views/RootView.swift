@@ -125,7 +125,7 @@ struct RootView: View {
     private var tabBarLayer: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
-            TabBarView(chrome: chrome,
+            TabBarView(miniState: chrome.miniState,
                        tab: tab,
                        onSelect: { select($0) })
         }
@@ -328,14 +328,14 @@ private struct TopBarView: View {
 // MARK: - 底部 tab bar（对应 HTML .tabbar / .mini）
 
 private struct TabBarView: View {
-    @ObservedObject var chrome: ScrollChrome
+    @ObservedObject var miniState: TabMiniState
     let tab: AppTab
     let onSelect: (AppTab) -> Void
 
     @Namespace private var ns
 
     var body: some View {
-        let mini = chrome.mini
+        let mini = miniState.mini
         HStack(spacing: 0) {
             ForEach(AppTab.allCases) { item in
                 Button(action: { onSelect(item) }) {

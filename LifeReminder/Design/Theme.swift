@@ -220,14 +220,23 @@ struct AuroraBackground: View {
         ZStack {
             Theme.bg
 
-            blob(Theme.k1, size: 300)
-                .offset(x: drift ? -30 : -100, y: drift ? 20 : -70)
-            blob(Theme.k2, size: 280)
-                .offset(x: drift ? 140 : 200, y: drift ? 180 : 250)
-            blob(Theme.k3, size: 300)
-                .offset(x: drift ? -20 : -90, y: drift ? 590 : 520)
-            blob(Theme.k4, size: 260)
-                .offset(x: drift ? 150 : 210, y: drift ? 660 : 730)
+            // 光斑先离屏合成成一层，再整体做很慢的位移/缩放，
+            // 避免每帧重算 4 个大 blur 造成滚动卡顿。
+            GeometryReader { geo in
+                ZStack {
+                    blob(Theme.k1, size: 300)
+                        .position(x: 50, y: 80)
+                    blob(Theme.k2, size: 280)
+                        .position(x: geo.size.width - 20, y: 390)
+                    blob(Theme.k3, size: 300)
+                        .position(x: 60, y: 670)
+                    blob(Theme.k4, size: 260)
+                        .position(x: geo.size.width - 50, y: geo.size.height - 70)
+                }
+                .drawingGroup()
+                .scaleEffect(drift ? 1.04 : 1)
+                .offset(x: drift ? 8 : -8, y: drift ? 10 : -10)
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
