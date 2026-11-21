@@ -1,0 +1,360 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9F8E7D6C5B4A39281706C041 /* LifeReminderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B021 /* LifeReminderApp.swift */; };
+		9F8E7D6C5B4A39281706C042 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B022 /* Theme.swift */; };
+		9F8E7D6C5B4A39281706C043 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B023 /* Components.swift */; };
+		9F8E7D6C5B4A39281706C044 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B024 /* Models.swift */; };
+		9F8E7D6C5B4A39281706C045 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B025 /* AppStore.swift */; };
+		9F8E7D6C5B4A39281706C046 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B026 /* SettingsStore.swift */; };
+		9F8E7D6C5B4A39281706C047 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B027 /* NotificationManager.swift */; };
+		9F8E7D6C5B4A39281706C048 /* DeepSeekService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B028 /* DeepSeekService.swift */; };
+		9F8E7D6C5B4A39281706C049 /* AliyunASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B029 /* AliyunASRService.swift */; };
+		9F8E7D6C5B4A39281706C04A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02A /* AudioRecorder.swift */; };
+		9F8E7D6C5B4A39281706C04B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02B /* RootView.swift */; };
+		9F8E7D6C5B4A39281706C04C /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02C /* TodayView.swift */; };
+		9F8E7D6C5B4A39281706C04D /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02D /* TasksView.swift */; };
+		9F8E7D6C5B4A39281706C04E /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02E /* CaptureView.swift */; };
+		9F8E7D6C5B4A39281706C04F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B02F /* SettingsView.swift */; };
+		9F8E7D6C5B4A39281706C050 /* TaskEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B030 /* TaskEditorView.swift */; };
+		9F8E7D6C5B4A39281706C051 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9F8E7D6C5B4A39281706B031 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		9F8E7D6C5B4A39281706B005 /* LifeReminder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LifeReminder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F8E7D6C5B4A39281706B021 /* LifeReminderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeReminderApp.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B022 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B023 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B024 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B025 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B026 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B027 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B028 /* DeepSeekService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepSeekService.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B029 /* AliyunASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AliyunASRService.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B02A /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B02B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B02C /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B02D /* TasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksView.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B02E /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B02F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B030 /* TaskEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskEditorView.swift; sourceTree = "<group>"; };
+		9F8E7D6C5B4A39281706B031 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9F8E7D6C5B4A39281706B007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9F8E7D6C5B4A39281706B002 = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B010 /* LifeReminder */,
+				9F8E7D6C5B4A39281706B003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9F8E7D6C5B4A39281706B003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B005 /* LifeReminder.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9F8E7D6C5B4A39281706B010 /* LifeReminder */ = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B021 /* LifeReminderApp.swift */,
+				9F8E7D6C5B4A39281706B011 /* Design */,
+				9F8E7D6C5B4A39281706B012 /* Models */,
+				9F8E7D6C5B4A39281706B013 /* Services */,
+				9F8E7D6C5B4A39281706B014 /* Views */,
+				9F8E7D6C5B4A39281706B031 /* Assets.xcassets */,
+			);
+			path = LifeReminder;
+			sourceTree = "<group>";
+		};
+		9F8E7D6C5B4A39281706B011 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B022 /* Theme.swift */,
+				9F8E7D6C5B4A39281706B023 /* Components.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		9F8E7D6C5B4A39281706B012 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B024 /* Models.swift */,
+				9F8E7D6C5B4A39281706B025 /* AppStore.swift */,
+				9F8E7D6C5B4A39281706B026 /* SettingsStore.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		9F8E7D6C5B4A39281706B013 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B027 /* NotificationManager.swift */,
+				9F8E7D6C5B4A39281706B028 /* DeepSeekService.swift */,
+				9F8E7D6C5B4A39281706B029 /* AliyunASRService.swift */,
+				9F8E7D6C5B4A39281706B02A /* AudioRecorder.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		9F8E7D6C5B4A39281706B014 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9F8E7D6C5B4A39281706B02B /* RootView.swift */,
+				9F8E7D6C5B4A39281706B02C /* TodayView.swift */,
+				9F8E7D6C5B4A39281706B02D /* TasksView.swift */,
+				9F8E7D6C5B4A39281706B02E /* CaptureView.swift */,
+				9F8E7D6C5B4A39281706B02F /* SettingsView.swift */,
+				9F8E7D6C5B4A39281706B030 /* TaskEditorView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9F8E7D6C5B4A39281706B004 /* LifeReminder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9F8E7D6C5B4A39281706B00A /* Build configuration list for PBXNativeTarget "LifeReminder" */;
+			buildPhases = (
+				9F8E7D6C5B4A39281706B006 /* Sources */,
+				9F8E7D6C5B4A39281706B007 /* Frameworks */,
+				9F8E7D6C5B4A39281706B008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LifeReminder;
+			productName = LifeReminder;
+			productReference = 9F8E7D6C5B4A39281706B005 /* LifeReminder.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9F8E7D6C5B4A39281706B001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					9F8E7D6C5B4A39281706B004 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 9F8E7D6C5B4A39281706B009 /* Build configuration list for PBXProject "LifeReminder" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9F8E7D6C5B4A39281706B002;
+			productRefGroup = 9F8E7D6C5B4A39281706B003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9F8E7D6C5B4A39281706B004 /* LifeReminder */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9F8E7D6C5B4A39281706B008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9F8E7D6C5B4A39281706C051 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9F8E7D6C5B4A39281706B006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9F8E7D6C5B4A39281706C041 /* LifeReminderApp.swift in Sources */,
+				9F8E7D6C5B4A39281706C042 /* Theme.swift in Sources */,
+				9F8E7D6C5B4A39281706C043 /* Components.swift in Sources */,
+				9F8E7D6C5B4A39281706C044 /* Models.swift in Sources */,
+				9F8E7D6C5B4A39281706C045 /* AppStore.swift in Sources */,
+				9F8E7D6C5B4A39281706C046 /* SettingsStore.swift in Sources */,
+				9F8E7D6C5B4A39281706C047 /* NotificationManager.swift in Sources */,
+				9F8E7D6C5B4A39281706C048 /* DeepSeekService.swift in Sources */,
+				9F8E7D6C5B4A39281706C049 /* AliyunASRService.swift in Sources */,
+				9F8E7D6C5B4A39281706C04A /* AudioRecorder.swift in Sources */,
+				9F8E7D6C5B4A39281706C04B /* RootView.swift in Sources */,
+				9F8E7D6C5B4A39281706C04C /* TodayView.swift in Sources */,
+				9F8E7D6C5B4A39281706C04D /* TasksView.swift in Sources */,
+				9F8E7D6C5B4A39281706C04E /* CaptureView.swift in Sources */,
+				9F8E7D6C5B4A39281706C04F /* SettingsView.swift in Sources */,
+				9F8E7D6C5B4A39281706C050 /* TaskEditorView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		9F8E7D6C5B4A39281706B00B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9F8E7D6C5B4A39281706B00C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		9F8E7D6C5B4A39281706B00D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "生活提醒";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "需要使用麦克风把你说的话转成文字，录音只用于语音识别。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.haohaochenha.lifereminder;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		9F8E7D6C5B4A39281706B00E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "生活提醒";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "需要使用麦克风把你说的话转成文字，录音只用于语音识别。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.haohaochenha.lifereminder;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9F8E7D6C5B4A39281706B009 /* Build configuration list for PBXProject "LifeReminder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F8E7D6C5B4A39281706B00B /* Debug */,
+				9F8E7D6C5B4A39281706B00C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9F8E7D6C5B4A39281706B00A /* Build configuration list for PBXNativeTarget "LifeReminder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F8E7D6C5B4A39281706B00D /* Debug */,
+				9F8E7D6C5B4A39281706B00E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9F8E7D6C5B4A39281706B001 /* Project object */;
+}
