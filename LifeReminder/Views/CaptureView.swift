@@ -320,13 +320,14 @@ struct CaptureView: View {
         let expire = settings.aliyunTokenExpire
         let akId = settings.aliyunAccessKeyId
         let akSecret = settings.aliyunAccessKeySecret
+        let canAutoRefresh = settings.hasAliyunAuto
 
         Task {
             do {
                 let data = try Data(contentsOf: url)
                 let pcm = AliyunASRService.rawPCM(fromWav: data)
 
-                if token.isEmpty || expire < Date().timeIntervalSince1970 {
+                if token.isEmpty || (canAutoRefresh && expire < Date().timeIntervalSince1970) {
                     let result = try await AliyunASRService.createToken(accessKeyId: akId,
                                                                        accessKeySecret: akSecret)
                     token = result.token
